@@ -41,11 +41,39 @@ def get_file_count(path):
 
     return count
 
+def get_contents_sorted_by_size(path, descending = True):
+    directory = validate_directory(path)
+
+    content_size = []
+    for content in directory.glob("*"):
+        if content.is_dir():
+            size = get_folder_size(content)
+        elif content.is_file():
+            size = content.stat().st_size
+        else:
+            continue
+        
+        content_info = {
+            "path": content,
+            "size": size
+        }
+        content_size.append(content_info)
+
+    if descending:
+        sorted_by_size = sorted(content_size, key = lambda x: x["size"], reverse = True)
+    else:
+        sorted_by_size = sorted(content_size, key = lambda x: x["size"])
+
+    return sorted_by_size
+
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
     size = get_folder_size(folder_path)
     folder_total = get_folder_count(folder_path)
     file_total = get_file_count(folder_path)
+    sorted_files = get_contents_sorted_by_size(folder_path)
     print(f"Size of Folder is: {format_size(size)}")
     print(f"Number of folders in Current directory: {folder_total}")
     print(f"Number of files in Current directory: {file_total}")
+    for content in sorted_files:
+        print(f"{content['path'].name}: {format_size(content['size'])}")
