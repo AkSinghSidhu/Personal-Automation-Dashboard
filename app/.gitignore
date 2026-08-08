@@ -1,0 +1,7 @@
+# Test files
+test/
+test.py
+
+# Python cache
+__pycache__/
+*.py[cod]
