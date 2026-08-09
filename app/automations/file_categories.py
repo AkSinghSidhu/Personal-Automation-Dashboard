@@ -1,5 +1,6 @@
 from pathlib import Path
 from .file_tools import validate_directory
+import shutil
 
 FILE_CATEGORIES = {
     "Images": {
@@ -181,6 +182,16 @@ def get_file_destination(file, category):
         destination_path = file.parent / category / file.name
 
     return destination_path
+
+def ensure_destination_directory(destination_directory):
+    destination_directory.mkdir(parents=True, exist_ok=True)
+
+def execute_organization_plan(organization_plan):
+    for item in organization_plan:
+        ensure_destination_directory(item["destination"].parent)
+        source = item["file"]
+        destination = item["destination"]
+        shutil.move(source, destination)
 
 
 if __name__ == "__main__":
