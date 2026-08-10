@@ -198,3 +198,5 @@ if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
     organization_plan = create_organization_plan(folder_path)
     print(organization_plan)
+
+    execution_test = execute_organization_plan(organization_plan)
