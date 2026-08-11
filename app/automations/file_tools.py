@@ -11,6 +11,17 @@ def validate_directory(path):
 
     return directory
 
+def validate_file_path(path):
+    file = Path(path).resolve()
+
+    if not file.exists():
+        raise FileNotFoundError("File does not exist")
+
+    if not file.is_file():
+        raise ValueError("Given Path is not a file")
+
+    return file
+
 def get_folder_size(path):
     directory = validate_directory(path)
     
@@ -20,6 +31,13 @@ def get_folder_size(path):
             total_size += file.stat().st_size
 
     return total_size
+
+def get_file_size(path):
+    file = validate_file_path(path)
+
+    file_size = file.stat().st_size
+
+    return file_size
 
 def format_size(size):
     for unit in ["B", "KB", "MB", "GB", "TB"]:
@@ -49,7 +67,7 @@ def get_contents_sorted_by_size(path, descending = True):
         if content.is_dir():
             size = get_folder_size(content)
         elif content.is_file():
-            size = content.stat().st_size
+            size = get_file_size(content)
         else:
             continue
         
@@ -77,3 +95,7 @@ if __name__ == "__main__":
     print(f"Number of files in Current directory: {file_total}")
     for content in sorted_files:
         print(f"{content['path'].name}: {format_size(content['size'])}")
+
+    file = input("Enter File path: ")
+    file_size = get_file_size(file)
+    print(format_size(file_size))
