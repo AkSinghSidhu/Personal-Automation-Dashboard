@@ -1,4 +1,5 @@
 from pathlib import Path
+import hashlib
 
 def validate_directory(path):
     directory = Path(path).resolve()
@@ -84,6 +85,14 @@ def get_contents_sorted_by_size(path, descending = True):
 
     return sorted_by_size
 
+def get_file_hash(file):
+    file = validate_file_path(file)
+
+    with open(file, "rb") as f:
+        digest = hashlib.file_digest(f, "sha256")
+
+    return digest.hexdigest()
+
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
     size = get_folder_size(folder_path)
@@ -99,3 +108,8 @@ if __name__ == "__main__":
     file = input("Enter File path: ")
     file_size = get_file_size(file)
     print(format_size(file_size))
+
+    file1 = input("Enter File_1 path for its HASH: ")
+    file2 = input("Enter File_2 path for its HASH: ")
+    print(f"HASH of File_1: {get_file_hash(file1)}")
+    print(f"HASH of File_2: {get_file_hash(file2)}")
