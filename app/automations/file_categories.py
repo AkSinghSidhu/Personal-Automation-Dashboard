@@ -1,5 +1,5 @@
 from pathlib import Path
-from .file_tools import validate_directory
+from .file_tools import validate_directory, get_file_size, get_file_hash
 import shutil
 
 FILE_CATEGORIES = {
@@ -186,13 +186,44 @@ def get_file_destination(file, category):
 def ensure_destination_directory(destination_directory):
     destination_directory.mkdir(parents=True, exist_ok=True)
 
+def auto_rename_content(destination):
+    number = 1
+
+    while destination.exists():
+        new_name = destination.stem + "_" + str(number) + destination.suffix
+        candidate = destination.parent / new_name
+
+        if not candidate.exists():
+            return candidate
+
+        number += 1
+
+    return destination
+
+def collision_detection(destination, curr_file):
+    if destination.exists():
+        size_of_destination = get_file_size(destination)
+        size_of_curr_file = get_file_size(curr_file)
+        if size_of_destination == size_of_curr_file:
+            hash_of_destination = get_file_hash(destination)
+            hash_of_curr_file = get_file_hash(curr_file)
+            if hash_of_destination == hash_of_curr_file:
+                same_file = True
+            else:
+                auto_rename_content(destination)
+
+        else:
+            auto_rename_content(destination)
+
+    return destination
+
 def execute_organization_plan(organization_plan):
     for item in organization_plan:
         ensure_destination_directory(item["destination"].parent)
         source = item["file"]
         destination = item["destination"]
+        collision = collision_detection(destination, source)
         shutil.move(source, destination)
-
 
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
