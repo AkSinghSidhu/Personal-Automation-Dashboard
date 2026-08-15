@@ -201,6 +201,7 @@ def auto_rename_content(destination):
     return destination
 
 def collision_detection(destination, curr_file):
+    same_file = False
     if destination.exists():
         size_of_destination = get_file_size(destination)
         size_of_curr_file = get_file_size(curr_file)
@@ -209,21 +210,29 @@ def collision_detection(destination, curr_file):
             hash_of_curr_file = get_file_hash(curr_file)
             if hash_of_destination == hash_of_curr_file:
                 same_file = True
+                return (destination, same_file)
             else:
-                auto_rename_content(destination)
+                new_destination = auto_rename_content(destination)
 
         else:
-            auto_rename_content(destination)
+            new_destination = auto_rename_content(destination)
 
-    return destination
+    else:
+        return (destination, same_file)
+
+    return (new_destination, same_file)
 
 def execute_organization_plan(organization_plan):
     for item in organization_plan:
-        ensure_destination_directory(item["destination"].parent)
+        
         source = item["file"]
         destination = item["destination"]
-        collision = collision_detection(destination, source)
-        shutil.move(source, destination)
+        destination, same_file = collision_detection(destination, source)
+        if same_file:
+            continue
+        else:
+            ensure_destination_directory(item["destination"].parent)
+            shutil.move(source, destination)
 
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
