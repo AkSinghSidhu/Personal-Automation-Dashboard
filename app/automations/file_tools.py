@@ -40,6 +40,33 @@ def get_file_size(path):
 
     return file_size
 
+def build_directory_tree(path):
+
+    total_folder_size = 0
+    children = []
+
+    for content in path.glob("*"):
+        if content.is_dir():
+            child_folder = build_directory_tree(content)
+            total_folder_size += child_folder["size"]
+            children.append(child_folder)
+        elif content.is_file():
+            curr_file_size = get_file_size(content)
+            total_folder_size += curr_file_size
+            child_file = {
+                "name": content.name,
+                "size": curr_file_size
+            }
+            children.append(child_file)
+        else:
+            continue
+
+    return {
+        "name": path.name,
+        "size": total_folder_size,
+        "children": children
+    }
+
 def format_size(size):
     for unit in ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]:
         if size < 1024:
@@ -95,6 +122,8 @@ def get_file_hash(file):
 
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
+    file_size_tree = build_directory_tree(validate_directory(folder_path))
+    print(file_size_tree)
     size = get_folder_size(folder_path)
     folder_total = get_folder_count(folder_path)
     file_total = get_file_count(folder_path)
