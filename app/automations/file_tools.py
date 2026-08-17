@@ -112,6 +112,20 @@ def get_contents_sorted_by_size(path, descending = True):
 
     return sorted_by_size
 
+def get_directory_stats(path):
+    directory = validate_directory(path)
+
+    file_count = get_file_count(directory)
+    folder_count = get_folder_count(directory)
+    total_size = get_folder_size(directory)
+    # would need to optimise later to use only 1 traversal later rather than 3 here
+
+    return {
+        "files": file_count,
+        "folders": folder_count,
+        "total size": total_size
+    }
+
 def get_file_hash(file):
     file = validate_file_path(file)
 
