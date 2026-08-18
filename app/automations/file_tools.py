@@ -115,10 +115,18 @@ def get_contents_sorted_by_size(path, descending = True):
 def get_directory_stats(path):
     directory = validate_directory(path)
 
-    file_count = get_file_count(directory)
-    folder_count = get_folder_count(directory)
-    total_size = get_folder_size(directory)
-    # would need to optimise later to use only 1 traversal later rather than 3 here
+    file_count = 0
+    folder_count = 0
+    total_size = 0
+
+    for content in directory.rglob("*"):
+        if content.is_dir():
+            folder_count += 1
+        elif content.is_file():
+            file_count += 1
+            total_size += content.stat().st_size
+        else:
+            continue
 
     return {
         "files": file_count,
