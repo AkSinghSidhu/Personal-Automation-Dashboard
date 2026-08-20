@@ -142,6 +142,18 @@ def get_file_hash(file):
 
     return digest.hexdigest()
 
+def get_empty_directories(path):
+    directory = validate_directory(path)
+
+    empty_directories = []
+    for content in directory.rglob("*"):
+        if content.is_dir():
+            if next(content.iterdir(), None) is None:
+                empty_directories.append(content)
+
+    return empty_directories
+
+
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
     file_size_tree = build_directory_tree(validate_directory(folder_path))
