@@ -153,6 +153,31 @@ def get_empty_directories(path):
 
     return empty_directories
 
+def search(path, query, filter_type = None):
+    directory = validate_directory(path)
+
+    search_results = []
+
+    if filter_type is None:
+        type_check = lambda content: True
+    elif filter_type == "files":
+        type_check = lambda content: content.is_file()
+    elif filter_type == "folders":
+        type_check = lambda content: content.is_dir()
+    else:
+        raise ValueError(f"Invalid filter_type: '{filter_type}'")
+
+
+    for content in directory.rglob("*"):
+        if type_check(content) and query.lower() in content.name.lower():
+            result = {
+                "name": content.name,
+                "path": content
+                }
+            search_results.append(result)
+
+    return search_results
+
 
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
@@ -176,3 +201,7 @@ if __name__ == "__main__":
     file2 = input("Enter File_2 path for its HASH: ")
     print(f"HASH of File_1: {get_file_hash(file1)}")
     print(f"HASH of File_2: {get_file_hash(file2)}")
+
+    test_folder = input("Enter folder path: ")
+    search_results = search(test_folder, "file")
+    print(search_results)
