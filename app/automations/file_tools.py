@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime, timedelta
 import hashlib
 
 def validate_directory(path):
@@ -178,6 +179,44 @@ def search(path, query, filter_type = None):
 
     return search_results
 
+def get_recently_modified_files(path, days):
+    directory = validate_directory(path)
+    now = datetime.now()
+    days_ago = now - timedelta(days = days)
+
+    modified_files = []
+    for file in directory.rglob("*"):
+        if file.is_file():
+            modification_time = datetime.fromtimestamp(file.stat().st_mtime)
+            if modification_time >= days_ago:
+                modified_files.append({
+                    "file": file,
+                    "modified_on": modification_time
+                })
+
+    return modified_files
+
+def get_recently_created_files(path, days):
+    directory = validate_directory(path)
+    now = datetime.now()
+    days_ago = now - timedelta(days = days)
+
+    created_files = []
+    for file in directory.rglob("*"):
+        if file.is_file():
+            try:
+                create_time = datetime.fromtimestamp(file.stat().st_birthtime)
+            except AttributeError:
+                create_time = datetime.fromtimestamp(file.stat().st_ctime)
+
+            if create_time >= days_ago:
+                created_files.append({
+                    "file": file,
+                    "created_on": create_time
+                })
+
+    return created_files
+
 
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
@@ -205,3 +244,6 @@ if __name__ == "__main__":
     test_folder = input("Enter folder path: ")
     search_results = search(test_folder, "file")
     print(search_results)
+
+    print(get_recently_modified_files(test_folder, 7))
+    print(get_recently_created_files(test_folder, 7))
