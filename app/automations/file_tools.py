@@ -217,6 +217,11 @@ def get_recently_created_files(path, days):
 
     return created_files
 
+def sort_files_by_modified_time(modified_files, descending=True):
+    sorted_by_modification_time = sorted(modified_files, key = lambda x: x["modified_on"], reverse = descending)
+
+    return sorted_by_modification_time
+
 
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")

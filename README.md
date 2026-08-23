@@ -6,23 +6,49 @@ A Python-based collection of useful automation tools for everyday file and syste
 
 ### Added
 
-* ✓ Folder size calculator
-* ✓ Folder and file counter
-* ✓ File categorization
-* ✓ File organization planning
-* ✓ File size comparison
-* ✓ File hashing
-* ✓ Duplicate file finder using size and hash comparison
+**File Tools (`file_tools.py`)**
+* ✓ Folder and file size calculator
+* ✓ Human-readable size formatting (B → KB → MB → GB → TB → PB+)
+* ✓ Recursive folder and file counter
+* ✓ Directory statistics — file count, folder count, total size in a single traversal
+* ✓ Contents sorted by size (ascending or descending)
+* ✓ Recursive directory size tree — nested structure with sizes bubbling up from children
+* ✓ SHA-256 file hashing
+* ✓ Empty directory detection
+* ✓ File and folder search with optional type filter (files only / folders only)
+* ✓ Recently modified files (within N days)
+* ✓ Recently created files (within N days, cross-platform)
+
+**File Organizer (`file_categories.py`)**
+* ✓ 18-category file classification system (Images, Videos, Audio, Documents, Code, etc.)
+* ✓ File category detection by extension
+* ✓ Destination path calculation
+* ✓ Organization plan generation (non-destructive planning phase)
+* ✓ Safe organization execution with full collision handling:
+  * ✓ Destination existence check
+  * ✓ File size comparison
+  * ✓ Hash-based duplicate detection
+  * ✓ Automatic filename collision resolution (`photo_1.jpg`, `photo_2.jpg`, ...)
+  * ✓ True duplicate skipping (same hash → file not moved)
+
+**Duplicate Finder (`duplicate_finder.py`)**
+* ✓ Recursive duplicate file scanning
+* ✓ Size-first grouping (eliminates unique files without hashing)
+* ✓ Hash-based confirmation of true duplicates
+* ✓ Confirmed duplicate groups returned for review
 
 ### To Add
 
-* ✗ Automatic file organization
-* ✗ Duplicate file removal
-* ✗ Duplicate file management options
-* ✗ File search utilities
-* ✗ More file management automations
-* ✗ User-friendly Web interface
-* ✗ Tests for all automations
+* ✗ Error handling for file operations
+* ✗ Operation logging
+* ✗ Undo / rollback
+* ✗ Duplicate file management (delete / retain selected)
+* ✗ File inspector (metadata, MIME type, permissions)
+* ✗ Storage analysis (largest files, type distribution)
+* ✗ Cleanup tools (temp files, large files, old files)
+* ✗ Batch rename, archive tools
+* ✗ Automated test suite
+* ✗ User-friendly web interface
 
 ## Project Structure
 
@@ -32,7 +58,6 @@ Personal-Automation-Dashboard/
 │   └── automations/
 │       ├── file_tools.py
 │       ├── file_categories.py
-│       ├── path_utils.py
 │       └── duplicate_finder.py
 └── README.md
 ```
