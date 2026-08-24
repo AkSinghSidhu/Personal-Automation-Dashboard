@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import datetime, timedelta
-import hashlib
+import hashlib, sys
 
 def validate_directory(path):
     directory = Path(path).resolve()
@@ -221,6 +221,21 @@ def sort_files_by_modified_time(modified_files, descending=True):
     sorted_by_modification_time = sorted(modified_files, key = lambda x: x["modified_on"], reverse = descending)
 
     return sorted_by_modification_time
+
+def get_large_files(path, min_size):
+    directory = validate_directory(path)
+    large_files = []
+
+    for file in directory.rglob("*"):
+        if file.is_file():
+            size = get_file_size(file)
+            if size >= min_size:
+                large_files.append({
+                    "file": file,
+                    "size": size
+                })
+
+    return large_files
 
 
 if __name__ == "__main__":
