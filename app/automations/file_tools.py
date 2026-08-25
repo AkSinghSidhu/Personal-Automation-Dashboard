@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import datetime, timedelta
-import hashlib, sys
+import hashlib
 
 def validate_directory(path):
     directory = Path(path).resolve()
@@ -236,6 +236,11 @@ def get_large_files(path, min_size):
                 })
 
     return large_files
+
+def sort_files_by_created_time(files, descending=True):
+    sorted_by_created_time = sorted(files, key = lambda x: x["created_on"], reverse = descending)
+
+    return sorted_by_created_time
 
 
 if __name__ == "__main__":
