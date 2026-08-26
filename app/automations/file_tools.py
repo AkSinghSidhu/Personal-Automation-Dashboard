@@ -179,6 +179,23 @@ def search(path, query, filter_type = None):
 
     return search_results
 
+def get_files_by_extension(path, extension):
+    directory = validate_directory(path)
+    extension = extension.lower()
+
+    if not extension.startswith("."):
+        extension = "." + extension
+
+    files_with_extension = []
+    for file in directory.rglob("*"):
+        if file.is_file():
+            if file.suffix.lower() == extension:
+                files_with_extension.append({
+                    "file": file
+                })
+
+    return files_with_extension
+
 def get_recently_modified_files(path, days):
     directory = validate_directory(path)
     now = datetime.now()
