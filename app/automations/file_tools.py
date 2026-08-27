@@ -234,6 +234,23 @@ def get_recently_created_files(path, days):
 
     return created_files
 
+def get_old_files(path, days):
+    directory = validate_directory(path)
+    now = datetime.now()
+    days_ago = now - timedelta(days = days)
+
+    old_files = []
+    for file in directory.rglob("*"):
+        if file.is_file():
+            modification_time = datetime.fromtimestamp(file.stat().st_mtime)
+            if modification_time <= days_ago:
+                old_files.append({
+                    "file": file,
+                    "modified_on": modification_time
+                })
+
+    return old_files
+
 def sort_files_by_modified_time(modified_files, descending=True):
     sorted_by_modification_time = sorted(modified_files, key = lambda x: x["modified_on"], reverse = descending)
 
