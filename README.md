@@ -16,8 +16,14 @@ A Python-based collection of useful automation tools for everyday file and syste
 * ✓ SHA-256 file hashing
 * ✓ Empty directory detection
 * ✓ File and folder search with optional type filter (files only / folders only)
+* ✓ Filter files by extension (auto-handles `.jpg` or `jpg` input)
 * ✓ Recently modified files (within N days)
 * ✓ Recently created files (within N days, cross-platform)
+* ✓ Old files — files not modified in the last N days
+* ✓ Large files — files above a given size threshold
+* ✓ File modification time and creation time as standalone utilities
+* ✓ File info — name, size, extension, creation time, modification time in one call
+* ✓ Sort results by modified time, created time (ascending or descending)
 
 **File Organizer (`file_categories.py`)**
 * ✓ 18-category file classification system (Images, Videos, Audio, Documents, Code, etc.)
@@ -43,9 +49,8 @@ A Python-based collection of useful automation tools for everyday file and syste
 * ✗ Operation logging
 * ✗ Undo / rollback
 * ✗ Duplicate file management (delete / retain selected)
-* ✗ File inspector (metadata, MIME type, permissions)
-* ✗ Storage analysis (largest files, type distribution)
-* ✗ Cleanup tools (temp files, large files, old files)
+* ✗ Storage analysis (type distribution, usage breakdown)
+* ✗ Cleanup tools (temp files, empty directories)
 * ✗ Batch rename, archive tools
 * ✗ Automated test suite
 * ✗ User-friendly web interface

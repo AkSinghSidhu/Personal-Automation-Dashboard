@@ -88,6 +88,37 @@ def get_file_count(path):
 
     return count
 
+def get_creation_time(path):
+    file = validate_file_path(path)
+
+    try:
+        create_time = datetime.fromtimestamp(file.stat().st_birthtime)
+    except AttributeError:
+        create_time = datetime.fromtimestamp(file.stat().st_ctime)
+
+    return create_time
+
+def get_modification_time(path):
+    file = validate_file_path(path)
+
+    modification_time = datetime.fromtimestamp(file.stat().st_mtime)
+
+    return modification_time
+
+def get_file_info(path):
+    file = validate_file_path(path)
+
+    file_info = {
+        "name": file.name,
+        "size": get_file_size(file),
+        "extension": file.suffix,
+        "creation_time": get_creation_time(file),
+        "modification_time": get_modification_time(file)
+    }
+
+    return file_info
+
+
 def get_contents_sorted_by_size(path, descending = True):
     directory = validate_directory(path)
 
@@ -204,7 +235,7 @@ def get_recently_modified_files(path, days):
     modified_files = []
     for file in directory.rglob("*"):
         if file.is_file():
-            modification_time = datetime.fromtimestamp(file.stat().st_mtime)
+            modification_time = get_modification_time(file)
             if modification_time >= days_ago:
                 modified_files.append({
                     "file": file,
@@ -221,10 +252,7 @@ def get_recently_created_files(path, days):
     created_files = []
     for file in directory.rglob("*"):
         if file.is_file():
-            try:
-                create_time = datetime.fromtimestamp(file.stat().st_birthtime)
-            except AttributeError:
-                create_time = datetime.fromtimestamp(file.stat().st_ctime)
+            create_time = get_creation_time(file)
 
             if create_time >= days_ago:
                 created_files.append({
@@ -242,7 +270,7 @@ def get_old_files(path, days):
     old_files = []
     for file in directory.rglob("*"):
         if file.is_file():
-            modification_time = datetime.fromtimestamp(file.stat().st_mtime)
+            modification_time = get_modification_time(file)
             if modification_time <= days_ago:
                 old_files.append({
                     "file": file,
@@ -253,7 +281,7 @@ def get_old_files(path, days):
 
 def sort_files_by_modified_time(modified_files, descending=True):
     sorted_by_modification_time = sorted(modified_files, key = lambda x: x["modified_on"], reverse = descending)
-
+    
     return sorted_by_modification_time
 
 def get_large_files(path, min_size):
