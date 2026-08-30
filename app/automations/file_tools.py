@@ -30,7 +30,7 @@ def get_folder_size(path):
     total_size = 0
     for file in directory.rglob("*"):
         if file.is_file():
-            total_size += file.stat().st_size
+            total_size += get_file_size(file)
 
     return total_size
 
