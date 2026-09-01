@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 from typing import Optional
-from .file_tools import validate_directory, get_modification_time, build_directory_tree
+from .file_tools import validate_directory, validate_file_path, get_modification_time, build_directory_tree
 
 db = SQLAlchemy()
 
@@ -79,3 +79,21 @@ def get_cached_entry(path):
     cache = result.scalar_one_or_none()
 
     return cache
+
+def get_all_cached_entries(path):
+    path = str(path)
+    if not path.endswith("/"):
+        path = f"{path}{"/"}"
+
+    result = db.session.execute(
+        select(DirectorySizeCache).where(
+            DirectorySizeCache.full_path.startswith(path)
+        )
+    )
+
+    cache = result.scalars().all()
+
+    return cache   
+    
+
+    
