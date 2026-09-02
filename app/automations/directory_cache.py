@@ -95,5 +95,10 @@ def get_all_cached_entries(path):
 
     return cache   
     
-
-    
+def delete_cached_entry(path):
+    cached_entry = get_cached_entry(path)
+    if cached_entry:
+        db.session.delete(cached_entry)
+        db.session.commit()
+    else:
+        raise Exception("Cached entry not found")
