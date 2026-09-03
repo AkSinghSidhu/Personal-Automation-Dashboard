@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 from typing import Optional
-from .file_tools import validate_directory, validate_file_path, get_modification_time, build_directory_tree
+from .file_tools import validate_directory, validate_file_path, get_modification_time, build_directory_tree, get_file_size
 
 db = SQLAlchemy()
 
@@ -99,6 +99,15 @@ def delete_cached_entry(path):
     cached_entry = get_cached_entry(path)
     if cached_entry:
         db.session.delete(cached_entry)
+        db.session.commit()
+    else:
+        raise Exception("Cached entry not found")
+
+def update_cached_entry(path):
+    cached_entry = get_cached_entry(path)
+    if cached_entry:
+        cached_entry.size = get_file_size(path)
+        cached_entry.mtime = get_modification_time(path)
         db.session.commit()
     else:
         raise Exception("Cached entry not found")
