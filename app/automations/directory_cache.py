@@ -101,7 +101,7 @@ def delete_cached_entry(path):
         db.session.delete(cached_entry)
         db.session.commit()
     else:
-        raise Exception("Cached entry not found")
+        raise KeyError("Cached entry not found")
 
 def update_cached_entry(path):
     cached_entry = get_cached_entry(path)
@@ -110,4 +110,18 @@ def update_cached_entry(path):
         cached_entry.mtime = get_modification_time(path)
         db.session.commit()
     else:
-        raise Exception("Cached entry not found")
+        raise KeyError("Cached entry not found")
+
+def add_cached_entry(path):
+    file = validate_file_path(path)
+
+    cache = DirectorySizeCache(
+        full_path = str(file),
+        name = file.name,
+        size = get_file_size(file),
+        mtime = get_modification_time(file),
+        is_dir = False,
+        parent_path = str(file.parent)
+    )
+    db.session.add(cache)
+    db.session.commit()
