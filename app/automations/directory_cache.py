@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 from .file_tools import validate_directory, validate_file_path, get_modification_time, build_directory_tree, get_file_size
 
@@ -95,24 +96,26 @@ def get_all_cached_entries(path):
 
     return cache   
     
-def delete_cached_entry(path):
+def delete_cached_entry(path, commit=True):
     cached_entry = get_cached_entry(path)
     if cached_entry:
         db.session.delete(cached_entry)
-        db.session.commit()
+        if commit:
+            db.session.commit()
     else:
         raise KeyError("Cached entry not found")
 
-def update_cached_entry(path):
+def update_cached_entry(path, commit=True):
     cached_entry = get_cached_entry(path)
     if cached_entry:
         cached_entry.size = get_file_size(path)
         cached_entry.mtime = get_modification_time(path)
-        db.session.commit()
+        if commit:
+            db.session.commit()
     else:
         raise KeyError("Cached entry not found")
 
-def add_cached_entry(path):
+def add_cached_entry(path, commit=True):
     file = validate_file_path(path)
 
     cache = DirectorySizeCache(
@@ -124,4 +127,58 @@ def add_cached_entry(path):
         parent_path = str(file.parent)
     )
     db.session.add(cache)
-    db.session.commit()
+    if commit:
+        db.session.commit()
+
+def rescan(path):
+    directory = validate_directory(path)
+
+    rescanned_files = {}
+    for file in directory.rglob("*"): 
+        if file.is_file():
+            rescanned_files[str(file)] = get_modification_time(file)            
+    
+    return rescanned_files
+
+def get_file_changes(path):
+    directory = validate_directory(path)
+    rescanned_files = rescan(directory)
+    rescanned_set = set(rescanned_files.keys())
+
+    cached_entries = get_all_cached_entries(directory)
+    cached_files_entries = [entry for entry in cached_entries if not entry.is_dir]
+    cached_set = set(entry.full_path for entry in cached_files_entries)
+
+    new_files = rescanned_set - cached_set
+    deleted_files = cached_set - rescanned_set
+
+    cached_mtime = {entry.full_path: entry.mtime for entry in cached_files_entries}
+    modified_files = {path for path in rescanned_set & cached_set if rescanned_files[path] != cached_mtime[path]}
+
+    changes = {
+        "new_files": new_files,
+        "deleted_files": deleted_files,
+        "modified_files": modified_files
+    }
+
+    return changes
+
+def apply_changes(changes):
+    new_files = changes["new_files"]
+    deleted_files = changes["deleted_files"]
+    modified_files = changes["modified_files"]
+
+    try:
+        for new_file in new_files:
+            add_cached_entry(new_file, commit=False)
+
+        for deleted_file in deleted_files:
+            delete_cached_entry(deleted_file, commit=False)
+
+        for modified_file in modified_files:
+            update_cached_entry(modified_file, commit=False)
+
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise

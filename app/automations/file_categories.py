@@ -17,7 +17,7 @@ FILE_CATEGORIES = {
         ".mp4", ".m4v", ".mkv", ".mov",
         ".avi", ".wmv", ".flv", ".webm",
         ".mpeg", ".mpg", ".mpe", ".m2v",
-        ".ts", ".mts", ".m2ts", ".3gp",
+        ".mts", ".m2ts", ".3gp",
         ".3g2", ".vob", ".ogv", ".rm",
         ".rmvb", ".asf"
     },
@@ -58,7 +58,7 @@ FILE_CATEGORIES = {
         ".lz", ".lz4", ".lzma",
         ".tgz", ".tbz", ".txz",
         ".cab", ".arj", ".ace",
-        ".jar", ".war", ".ear"
+        ".war", ".ear"
     },
 
     "Disk Images": {
@@ -71,8 +71,7 @@ FILE_CATEGORIES = {
     "Executables": {
         ".exe", ".msi", ".msix", ".appx",
         ".deb", ".rpm", ".appimage",
-        ".run", ".bin",
-        ".com", ".bat", ".cmd",
+        ".run", ".com", ".bat", ".cmd",
         ".sh", ".bash", ".zsh",
         ".dll", ".so", ".dylib"
     },

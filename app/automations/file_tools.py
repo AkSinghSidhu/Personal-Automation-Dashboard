@@ -137,10 +137,7 @@ def get_contents_sorted_by_size(path, descending = True):
         }
         content_size.append(content_info)
 
-    if descending:
-        sorted_by_size = sorted(content_size, key = lambda x: x["size"], reverse = True)
-    else:
-        sorted_by_size = sorted(content_size, key = lambda x: x["size"])
+    sorted_by_size = sorted(content_size, key = lambda x: x["size"], reverse = descending)
 
     return sorted_by_size
 
@@ -156,7 +153,7 @@ def get_directory_stats(path):
             folder_count += 1
         elif content.is_file():
             file_count += 1
-            total_size += content.stat().st_size
+            total_size += get_file_size(content)
         else:
             continue
 
