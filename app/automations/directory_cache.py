@@ -94,7 +94,21 @@ def get_all_cached_entries(path):
 
     cache = result.scalars().all()
 
-    return cache   
+    return cache
+
+def get_direct_cached_children(path):
+    path = str(path)
+    path = path.rstrip("/")
+
+    result = db.session.execute(
+        select(DirectorySizeCache).where(
+            DirectorySizeCache.parent_path == path
+        )
+    )
+
+    cache = result.scalars().all()
+
+    return cache
     
 def delete_cached_entry(path, commit=True):
     cached_entry = get_cached_entry(path)
@@ -110,6 +124,15 @@ def update_cached_entry(path, commit=True):
     if cached_entry:
         cached_entry.size = get_file_size(path)
         cached_entry.mtime = get_modification_time(path)
+        if commit:
+            db.session.commit()
+    else:
+        raise KeyError("Cached entry not found")
+
+def update_cached_folder_size(path, size, commit=True):
+    cached_entry = get_cached_entry(path)
+    if cached_entry:
+        cached_entry.size = size
         if commit:
             db.session.commit()
     else:
@@ -163,7 +186,20 @@ def get_file_changes(path):
 
     return changes
 
-def apply_changes(changes):
+def propagate_changes_upwards(path):
+    direct_children = get_direct_cached_children(path)
+    total_folder_size = 0
+
+    for content in direct_children:
+        if content.is_dir:
+            total_folder_size += propagate_changes_upwards(content.full_path)
+        else:
+            total_folder_size += content.size
+
+    update_cached_folder_size(path, total_folder_size, commit=False)
+    return total_folder_size
+
+def apply_changes(changes, path):
     new_files = changes["new_files"]
     deleted_files = changes["deleted_files"]
     modified_files = changes["modified_files"]
@@ -182,3 +218,6 @@ def apply_changes(changes):
     except Exception:
         db.session.rollback()
         raise
+
+    propagate_changes_upwards(path)
+    db.session.commit()
