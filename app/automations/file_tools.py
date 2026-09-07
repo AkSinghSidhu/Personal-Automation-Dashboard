@@ -171,6 +171,15 @@ def get_file_hash(file):
 
     return digest.hexdigest()
 
+def get_partial_file_hash(path, chunk_size = 65536):
+    file = validate_file_path(path)
+
+    with open(file, "rb") as f:
+        data = f.read(chunk_size)
+
+    return hashlib.sha256(data).hexdigest()
+
+
 def get_empty_directories(path):
     directory = validate_directory(path)
 
