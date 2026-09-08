@@ -1,8 +1,6 @@
-from .file_tools import validate_directory, get_file_size, get_file_hash
+from .file_tools import validate_directory, get_file_size, get_file_hash, get_partial_file_hash
 
 def group_files_by_size(path):
-    
-    
     categorized_by_size = {}
     for file in path.rglob("*"):
         if file.is_file():
@@ -23,11 +21,23 @@ def filter_duplicate_candidates(files_by_size):
 
     return candidate_groups
 
-def group_files_by_hash(candidate_groups):
-
-    categorized_by_hashes = {}
+def second_pass_duplicate_candidates(candidate_groups):
+    new_candidates = {}
     for size in candidate_groups:
         files = candidate_groups[size]
+        for file in files:
+            partial_file_hash = get_partial_file_hash(file)
+            if partial_file_hash not in new_candidates:
+                new_candidates[partial_file_hash] = []
+
+            new_candidates[partial_file_hash].append(file)
+
+    return new_candidates
+
+def group_files_by_hash(candidate_groups):
+    categorized_by_hashes = {}
+    for hash_value in candidate_groups:
+        files = candidate_groups[hash_value]
         for file in files:
             file_hash = get_file_hash(file)
             if file_hash not in categorized_by_hashes:
@@ -51,7 +61,9 @@ def find_duplicate_files(path):
 
     grouping_files_by_size = group_files_by_size(directory)
     remove_unique_files = filter_duplicate_candidates(grouping_files_by_size)
-    grouping_files_by_hash = group_files_by_hash(remove_unique_files)
+    new_candidates = second_pass_duplicate_candidates(remove_unique_files)
+    remove_partial_unique = filter_duplicate_candidates(new_candidates)
+    grouping_files_by_hash = group_files_by_hash(remove_partial_unique)
     duplicate_files = filter_duplicate_groups(grouping_files_by_hash)
 
     return duplicate_files
