@@ -222,16 +222,29 @@ def collision_detection(destination, curr_file):
     return (new_destination, same_file)
 
 def execute_organization_plan(organization_plan):
+    errors = []
+    
     for item in organization_plan:
-        
         source = item["file"]
         destination = item["destination"]
         destination, same_file = collision_detection(destination, source)
+
         if same_file:
             continue
-        else:
+        
+        try:
             ensure_destination_directory(item["destination"].parent)
             shutil.move(source, destination)
+            
+        except FileNotFoundError:
+            errors.append({"file": source, "error": "File not found"})
+        except PermissionError:
+            errors.append({"file": source, "error": "Permission denied"})
+        except shutil.Error as e:
+            errors.append({"file": source, "error": str(e)})
+
+    return errors
+
 
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
