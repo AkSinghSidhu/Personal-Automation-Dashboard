@@ -4,11 +4,13 @@ def group_files_by_size(path):
     categorized_by_size = {}
     for file in path.rglob("*"):
         if file.is_file():
-            size = get_file_size(file)
-            if size not in categorized_by_size:
-                categorized_by_size[size] = []
-
-            categorized_by_size[size].append(file)
+            try:
+                size = get_file_size(file)
+                if size not in categorized_by_size:
+                    categorized_by_size[size] = []
+                categorized_by_size[size].append(file)
+            except (FileNotFoundError, PermissionError):
+                continue
 
     return categorized_by_size
 
@@ -26,11 +28,13 @@ def second_pass_duplicate_candidates(candidate_groups):
     for size in candidate_groups:
         files = candidate_groups[size]
         for file in files:
-            partial_file_hash = get_partial_file_hash(file)
-            if partial_file_hash not in new_candidates:
-                new_candidates[partial_file_hash] = []
-
-            new_candidates[partial_file_hash].append(file)
+            try:
+                partial_file_hash = get_partial_file_hash(file)
+                if partial_file_hash not in new_candidates:
+                    new_candidates[partial_file_hash] = []
+                new_candidates[partial_file_hash].append(file)
+            except (FileNotFoundError, PermissionError):
+                continue
 
     return new_candidates
 
@@ -39,11 +43,13 @@ def group_files_by_hash(candidate_groups):
     for hash_value in candidate_groups:
         files = candidate_groups[hash_value]
         for file in files:
-            file_hash = get_file_hash(file)
-            if file_hash not in categorized_by_hashes:
-                categorized_by_hashes[file_hash] = []
-
-            categorized_by_hashes[file_hash].append(file)
+            try:
+                file_hash = get_file_hash(file)
+                if file_hash not in categorized_by_hashes:
+                    categorized_by_hashes[file_hash] = []
+                categorized_by_hashes[file_hash].append(file)
+            except (FileNotFoundError, PermissionError):
+                continue
 
     return categorized_by_hashes
 
