@@ -57,17 +57,21 @@ def build_cache(path):
 
     result = traverse_directory_tree(directory_tree, directory, results)
 
-    for content_metadata in result:
-        cache = DirectorySizeCache(
-            full_path = content_metadata["full_path"],
-            name = content_metadata["name"],
-            size = content_metadata["size"],
-            mtime = content_metadata["mtime"],
-            is_dir = content_metadata["is_dir"],
-            parent_path = content_metadata["parent_path"]
-        )
-        db.session.add(cache)
-    db.session.commit()
+    try:
+        for content_metadata in result:
+            cache = DirectorySizeCache(
+                full_path = content_metadata["full_path"],
+                name = content_metadata["name"],
+                size = content_metadata["size"],
+                mtime = content_metadata["mtime"],
+                is_dir = content_metadata["is_dir"],
+                parent_path = content_metadata["parent_path"]
+            )
+            db.session.add(cache)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 
 def get_cached_entry(path):
     path = str(path)
@@ -159,8 +163,11 @@ def rescan(path):
     rescanned_files = {}
     for file in directory.rglob("*"): 
         if file.is_file():
-            rescanned_files[str(file)] = get_modification_time(file)            
-    
+            try:
+                rescanned_files[str(file)] = get_modification_time(file)
+            except (FileNotFoundError, PermissionError):
+                continue
+
     return rescanned_files
 
 def get_file_changes(path):
@@ -218,6 +225,9 @@ def apply_changes(changes, path):
     except Exception:
         db.session.rollback()
         raise
-
-    propagate_changes_upwards(path)
-    db.session.commit()
+    try:
+        propagate_changes_upwards(path)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
