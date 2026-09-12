@@ -165,7 +165,7 @@ def rescan(path):
         if file.is_file():
             try:
                 rescanned_files[str(file)] = get_modification_time(file)
-            except (FileNotFoundError, PermissionError):
+            except OSError:
                 continue
 
     return rescanned_files

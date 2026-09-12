@@ -29,8 +29,11 @@ def get_folder_size(path):
     
     total_size = 0
     for file in directory.rglob("*"):
-        if file.is_file():
-            total_size += get_file_size(file)
+        try:
+            if file.is_file():
+                total_size += get_file_size(file)
+        except OSError:
+            pass
 
     return total_size
 
@@ -42,24 +45,26 @@ def get_file_size(path):
     return file_size
 
 def build_directory_tree(path):
-
     total_folder_size = 0
     children = []
 
     for content in path.glob("*"):
-        if content.is_dir():
-            child_folder = build_directory_tree(content)
-            total_folder_size += child_folder["size"]
-            children.append(child_folder)
-        elif content.is_file():
-            curr_file_size = get_file_size(content)
-            total_folder_size += curr_file_size
-            child_file = {
-                "name": content.name,
-                "size": curr_file_size
-            }
-            children.append(child_file)
-        else:
+        try:
+            if content.is_dir():
+                child_folder = build_directory_tree(content)
+                total_folder_size += child_folder["size"]
+                children.append(child_folder)
+            elif content.is_file():
+                curr_file_size = get_file_size(content)
+                total_folder_size += curr_file_size
+                child_file = {
+                    "name": content.name,
+                    "size": curr_file_size
+                }
+                children.append(child_file)
+            else:
+                continue
+        except OSError:
             continue
 
     return {
@@ -124,18 +129,21 @@ def get_contents_sorted_by_size(path, descending = True):
 
     content_size = []
     for content in directory.glob("*"):
-        if content.is_dir():
-            size = get_folder_size(content)
-        elif content.is_file():
-            size = get_file_size(content)
-        else:
+        try:
+            if content.is_dir():
+                size = get_folder_size(content)
+            elif content.is_file():
+                size = get_file_size(content)
+            else:
+                continue
+
+            content_info = {
+                "path": content,
+                "size": size
+            }
+            content_size.append(content_info)
+        except OSError:
             continue
-        
-        content_info = {
-            "path": content,
-            "size": size
-        }
-        content_size.append(content_info)
 
     sorted_by_size = sorted(content_size, key = lambda x: x["size"], reverse = descending)
 
@@ -153,7 +161,10 @@ def get_directory_stats(path):
             folder_count += 1
         elif content.is_file():
             file_count += 1
-            total_size += get_file_size(content)
+            try:
+                total_size += get_file_size(content)
+            except OSError:
+                continue
         else:
             continue
 
@@ -185,9 +196,12 @@ def get_empty_directories(path):
 
     empty_directories = []
     for content in directory.rglob("*"):
-        if content.is_dir():
-            if next(content.iterdir(), None) is None:
-                empty_directories.append(content)
+        try:
+            if content.is_dir():
+                if next(content.iterdir(), None) is None:
+                    empty_directories.append(content)
+        except OSError:
+            continue
 
     return empty_directories
 
@@ -240,13 +254,16 @@ def get_recently_modified_files(path, days):
 
     modified_files = []
     for file in directory.rglob("*"):
-        if file.is_file():
-            modification_time = get_modification_time(file)
-            if modification_time >= days_ago:
-                modified_files.append({
-                    "file": file,
-                    "modified_on": modification_time
-                })
+        try:
+            if file.is_file():
+                modification_time = get_modification_time(file)
+                if modification_time >= days_ago:
+                    modified_files.append({
+                        "file": file,
+                        "modified_on": modification_time
+                    })
+        except OSError:
+            continue
 
     return modified_files
 
@@ -257,14 +274,16 @@ def get_recently_created_files(path, days):
 
     created_files = []
     for file in directory.rglob("*"):
-        if file.is_file():
-            create_time = get_creation_time(file)
-
-            if create_time >= days_ago:
-                created_files.append({
-                    "file": file,
-                    "created_on": create_time
-                })
+        try:
+            if file.is_file():
+                create_time = get_creation_time(file)
+                if create_time >= days_ago:
+                    created_files.append({
+                        "file": file,
+                        "created_on": create_time
+                    })
+        except OSError:
+            continue
 
     return created_files
 
@@ -275,13 +294,16 @@ def get_old_files(path, days):
 
     old_files = []
     for file in directory.rglob("*"):
-        if file.is_file():
-            modification_time = get_modification_time(file)
-            if modification_time <= days_ago:
-                old_files.append({
-                    "file": file,
-                    "modified_on": modification_time
-                })
+        try:
+            if file.is_file():
+                modification_time = get_modification_time(file)
+                if modification_time <= days_ago:
+                    old_files.append({
+                        "file": file,
+                        "modified_on": modification_time
+                    })
+        except OSError:
+            continue
 
     return old_files
 
@@ -295,13 +317,16 @@ def get_large_files(path, min_size):
     large_files = []
 
     for file in directory.rglob("*"):
-        if file.is_file():
-            size = get_file_size(file)
-            if size >= min_size:
-                large_files.append({
-                    "file": file,
-                    "size": size
-                })
+        try:
+            if file.is_file():
+                size = get_file_size(file)
+                if size >= min_size:
+                    large_files.append({
+                        "file": file,
+                        "size": size
+                    })
+        except OSError:
+            continue
 
     return large_files
 

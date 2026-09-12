@@ -9,7 +9,7 @@ def group_files_by_size(path):
                 if size not in categorized_by_size:
                     categorized_by_size[size] = []
                 categorized_by_size[size].append(file)
-            except (FileNotFoundError, PermissionError):
+            except OSError:
                 continue
 
     return categorized_by_size
@@ -33,7 +33,7 @@ def second_pass_duplicate_candidates(candidate_groups):
                 if partial_file_hash not in new_candidates:
                     new_candidates[partial_file_hash] = []
                 new_candidates[partial_file_hash].append(file)
-            except (FileNotFoundError, PermissionError):
+            except OSError:
                 continue
 
     return new_candidates
@@ -48,7 +48,7 @@ def group_files_by_hash(candidate_groups):
                 if file_hash not in categorized_by_hashes:
                     categorized_by_hashes[file_hash] = []
                 categorized_by_hashes[file_hash].append(file)
-            except (FileNotFoundError, PermissionError):
+            except OSError:
                 continue
 
     return categorized_by_hashes
