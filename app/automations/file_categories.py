@@ -1,5 +1,6 @@
 from pathlib import Path
 from .file_tools import validate_directory, get_file_size, get_file_hash
+from .logger import log_operation
 import shutil
 
 FILE_CATEGORIES = {
@@ -224,23 +225,29 @@ def collision_detection(destination, curr_file):
 def execute_organization_plan(organization_plan):
     for item in organization_plan:
         source = item["file"]
-        destination = item["destination"]
+        planned_destination = item["destination"]
         try:
-            destination, same_file = collision_detection(destination, source)
+            destination, same_file = collision_detection(planned_destination, source)
+            op_type = "rename_and_move" if destination != planned_destination else "move"
         except OSError:
             continue
 
         if same_file:
+            log_operation(source, "skip_duplicate", "success")
             continue
 
         try:
             ensure_destination_directory(item["destination"].parent)
             shutil.move(source, destination)
+            log_operation(source, op_type, "success", destination)
         except FileNotFoundError:
+            log_operation(source, op_type, "failed", destination, "File not found")
             continue
         except PermissionError:
+            log_operation(source, op_type, "failed", destination, "Permission denied")
             continue
-        except shutil.Error:
+        except shutil.Error as e:
+            log_operation(source, op_type, "failed", destination, str(e))
             continue
 
 
