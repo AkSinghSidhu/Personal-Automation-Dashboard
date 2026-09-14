@@ -17,3 +17,21 @@ def log_operation(original_path, operation_type, result, new_path=None, error=No
 
     with open(LOG_FILE, 'a') as f:
         f.write(json.dumps(log_entry) + '\n')
+
+def read_logs():
+    if not LOG_FILE.exists():
+        return []
+
+    logs = []
+    with open(LOG_FILE, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                logs.append(json.loads(line))
+    return logs
+
+
+if __name__ == "__main__":
+    log_operation("original_path", "operation_type", "result", "new_path", "error")
+    for log in read_logs():
+        print(log)
