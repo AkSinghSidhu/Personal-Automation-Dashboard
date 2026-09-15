@@ -250,6 +250,48 @@ def execute_organization_plan(organization_plan):
             log_operation(source, op_type, "failed", destination, str(e))
             continue
 
+def preview_organization_plan(plan):
+    width = 50
+    title = "ORGANIZATION PLAN PREVIEW"
+
+    print("=" * width)
+    print(title.center(width))
+    print("=" * width)
+
+    if not plan:
+        print("  (No files found in folder to organize)")
+        print("=" * width)
+        return
+
+    source_folder = plan[0]["file"].parent
+    print(f"Source Folder: {source_folder}\n")
+
+    print("Planned Moves:")
+    move_file_count = 0
+    for item in plan:
+        if item["category"] is not None:
+            move_file_count += 1
+            file_name = item["file"].name
+            dest = f"{item['category']}/{file_name}"
+            print(f"  • {file_name.ljust(20)} -> {dest}")
+
+    if move_file_count == 0:
+        print("  (None)")
+
+    print("\nSkipped (No category / Stays in place):")
+    skip_file_count = 0
+    for item in plan:
+        if item["category"] is None:
+            skip_file_count += 1
+            print(f"  • {item['file'].name}")
+
+    if skip_file_count == 0:
+        print("  (None)")
+
+    print("-" * width)
+    print(f"Total: {move_file_count + skip_file_count} | To move: {move_file_count} | To skip: {skip_file_count}")
+    print("=" * width)
+
 
 
 if __name__ == "__main__":
