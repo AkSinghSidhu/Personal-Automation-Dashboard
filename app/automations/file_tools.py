@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import datetime, timedelta
-import hashlib
+import hashlib, shutil
 
 def validate_directory(path):
     directory = Path(path).resolve()
@@ -73,6 +73,25 @@ def build_directory_tree(path):
         "children": children
     }
 
+def move_file(source, destination):
+    source = Path(source).resolve()
+    destination = Path(destination).resolve()
+
+    if not source.exists():
+        raise FileNotFoundError(f"Source file does not exist: {source}")
+    if not source.is_file():
+        raise ValueError(f"Source is not a file: {source}")
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    shutil.move(str(source), str(destination))
+
+def rename_file(path, new_name):
+    file = validate_file_path(path)
+    new_path = file.with_name(new_name)
+    file.rename(new_path)
+    return new_path
+
 def format_size(size):
     for unit in ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]:
         if size < 1024:
@@ -122,7 +141,6 @@ def get_file_info(path):
     }
 
     return file_info
-
 
 def get_contents_sorted_by_size(path, descending = True):
     directory = validate_directory(path)
@@ -189,7 +207,6 @@ def get_partial_file_hash(path, chunk_size = 65536):
         data = f.read(chunk_size)
 
     return hashlib.sha256(data).hexdigest()
-
 
 def get_empty_directories(path):
     directory = validate_directory(path)

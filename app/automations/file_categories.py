@@ -1,7 +1,6 @@
 from pathlib import Path
-from .file_tools import validate_directory, get_file_size, get_file_hash
+from .file_tools import validate_directory, get_file_size, get_file_hash, move_file
 from .logger import log_operation
-import shutil
 
 FILE_CATEGORIES = {
     "Images": {
@@ -237,8 +236,7 @@ def execute_organization_plan(organization_plan):
             continue
 
         try:
-            ensure_destination_directory(item["destination"].parent)
-            shutil.move(source, destination)
+            move_file(source, destination)
             log_operation(source, op_type, "success", destination)
         except FileNotFoundError:
             log_operation(source, op_type, "failed", destination, "File not found")
@@ -246,9 +244,10 @@ def execute_organization_plan(organization_plan):
         except PermissionError:
             log_operation(source, op_type, "failed", destination, "Permission denied")
             continue
-        except shutil.Error as e:
+        except (ValueError, OSError) as e:
             log_operation(source, op_type, "failed", destination, str(e))
             continue
+
 
 def preview_organization_plan(plan):
     width = 50
@@ -297,6 +296,11 @@ def preview_organization_plan(plan):
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
     organization_plan = create_organization_plan(folder_path)
-    print(organization_plan)
+    preview_organization_plan(organization_plan)
 
-    execution_test = execute_organization_plan(organization_plan)
+    confirm = input("\nProceed with organization? (y/n): ").strip().lower()
+    if confirm == "y":
+        execute_organization_plan(organization_plan)
+        print("Organization complete! Logged to app/logs/operations.jsonl")
+    else:
+        print("Organization cancelled. No files were moved.")

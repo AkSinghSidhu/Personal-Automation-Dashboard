@@ -15,7 +15,7 @@ def log_operation(original_path, operation_type, result, new_path=None, error=No
         'error': str(error) if error is not None else None
     }
 
-    with open(LOG_FILE, 'a') as f:
+    with open(LOG_FILE, 'a', encoding="utf-8") as f:
         f.write(json.dumps(log_entry) + '\n')
 
 def read_logs():
@@ -23,13 +23,22 @@ def read_logs():
         return []
 
     logs = []
-    with open(LOG_FILE, 'r') as f:
+    with open(LOG_FILE, 'r', encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
                 logs.append(json.loads(line))
     return logs
 
+def read_last_change():
+    if not LOG_FILE.exists():
+        return []
+    
+    with open(LOG_FILE, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+        if lines:
+            last_change = json.loads(lines[-1])
+    return last_change
 
 if __name__ == "__main__":
     log_operation("original_path", "operation_type", "result", "new_path", "error")
