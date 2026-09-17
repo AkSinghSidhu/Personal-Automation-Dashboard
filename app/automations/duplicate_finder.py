@@ -1,4 +1,4 @@
-from .file_tools import validate_directory, get_file_size, get_file_hash, get_partial_file_hash
+from .file_tools import validate_directory, get_file_size, get_file_hash, get_partial_file_hash, format_size
 
 def group_files_by_size(path):
     categorized_by_size = {}
@@ -62,6 +62,40 @@ def filter_duplicate_groups(files_by_hash):
 
     return duplicate_groups
 
+def preview_duplicate_groups(duplicate_files):
+    width = 60
+    title = "DUPLICATE FILES PREVIEW"
+
+    print("=" * width)
+    print(title.center(width))
+    print("=" * width)
+
+    if not duplicate_files:
+        print("  (No duplicate files found in this folder)")
+        print("=" * width)
+        return
+
+    total_groups = len(duplicate_files)
+    total_redundant_files = 0
+    total_wasted_bytes = 0
+
+    for i, files in enumerate(duplicate_files.values(), start=1):
+        file_size = get_file_size(files[0])
+        wasted_for_group = file_size * (len(files) - 1)
+        total_wasted_bytes += wasted_for_group
+        total_redundant_files += len(files) - 1
+
+        print(f"\n[Group {i}] - {format_size(file_size)} each ({len(files)} identical files):")
+        for file in files:
+            print(f"  • {file}")
+
+    print("\n" + "-" * width)
+    print(f"Duplicate Groups: {total_groups}")
+    print(f"Redundant Files:  {total_redundant_files}")
+    print(f"Wasted Storage:   {format_size(total_wasted_bytes)}")
+    print("=" * width)
+
+
 def find_duplicate_files(path):
     directory = validate_directory(path)
 
@@ -77,3 +111,4 @@ def find_duplicate_files(path):
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
     duplicate_files = find_duplicate_files(folder_path)
+    preview_duplicate_groups(duplicate_files)
