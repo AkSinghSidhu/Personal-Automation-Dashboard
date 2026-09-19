@@ -143,55 +143,72 @@ def update_cached_folder_size(path, size, commit=True):
         raise KeyError("Cached entry not found")
 
 def add_cached_entry(path, commit=True):
-    file = validate_file_path(path)
+    item = Path(path)
 
-    cache = DirectorySizeCache(
-        full_path = str(file),
-        name = file.name,
-        size = get_file_size(file),
-        mtime = get_modification_time(file),
-        is_dir = False,
-        parent_path = str(file.parent)
-    )
+    if item.is_dir():
+        cache = DirectorySizeCache(
+            full_path=str(item),
+            name=item.name,
+            size=0,
+            mtime=None,
+            is_dir=True,
+            parent_path=str(item.parent)
+        )
+    else:
+        item = validate_file_path(item)
+
+        cache = DirectorySizeCache(
+            full_path=str(item),
+            name=item.name,
+            size=get_file_size(item),
+            mtime=get_modification_time(item),
+            is_dir=False,
+            parent_path=str(item.parent)
+        )
+
     db.session.add(cache)
+
     if commit:
         db.session.commit()
 
 def rescan(path):
     directory = validate_directory(path)
 
-    rescanned_files = {}
-    for file in directory.rglob("*"): 
-        if file.is_file():
-            try:
-                rescanned_files[str(file)] = get_modification_time(file)
-            except OSError:
-                continue
+    rescanned_entries = {}
+    for item in directory.rglob("*"):
+        try:
+            rescanned_entries[str(item)] = {
+                "is_dir": item.is_dir(),
+                "mtime": get_modification_time(item) if item.is_file() else None,
+                "parent": str(item.parent)
+            }
+        except OSError:
+            continue
 
-    return rescanned_files
+    return rescanned_entries
 
 def get_file_changes(path):
     directory = validate_directory(path)
-    rescanned_files = rescan(directory)
-    rescanned_set = set(rescanned_files.keys())
+    rescanned_items = rescan(directory)
+    rescanned_set = set(rescanned_items.keys())
 
     cached_entries = get_all_cached_entries(directory)
-    cached_files_entries = [entry for entry in cached_entries if not entry.is_dir]
-    cached_set = set(entry.full_path for entry in cached_files_entries)
+    cached_set = {entry.full_path for entry in cached_entries}
 
     new_files = rescanned_set - cached_set
     deleted_files = cached_set - rescanned_set
 
-    cached_mtime = {entry.full_path: entry.mtime for entry in cached_files_entries}
-    modified_files = {path for path in rescanned_set & cached_set if rescanned_files[path] != cached_mtime[path]}
+    cached_file_mtimes = {entry.full_path: entry.mtime for entry in cached_entries if not entry.is_dir}
+    modified_files = {
+        p for p in (rescanned_set & cached_set)
+        if p in cached_file_mtimes and rescanned_items[p]["mtime"] != cached_file_mtimes[p]
+    }
 
-    changes = {
+    return {
         "new_files": new_files,
         "deleted_files": deleted_files,
         "modified_files": modified_files
     }
-
-    return changes
 
 def propagate_changes_upwards(path):
     direct_children = get_direct_cached_children(path)
