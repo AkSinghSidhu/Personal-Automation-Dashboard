@@ -45,7 +45,7 @@ def traverse_directory_tree(tree, current_path, results):
 
 def build_cache(path):
     directory = validate_directory(path)
-    cache_exist = get_all_cached_entries(directory)
+    cache_exist = get_cached_entry(directory)
     if cache_exist:
         return
     else:
@@ -246,7 +246,13 @@ def apply_changes(changes, path):
         for new_file in new_files:
             add_cached_entry(new_file, commit=False)
 
-        for deleted_file in deleted_files:
+        deleted_dir_prefixes = set()
+        for deleted_file in sorted(deleted_files):
+            if any(deleted_file.startswith(d + "/") for d in deleted_dir_prefixes):
+                continue
+            cached = get_cached_entry(deleted_file)
+            if cached and cached.is_dir:
+                deleted_dir_prefixes.add(deleted_file)
             delete_cached_entry(deleted_file, commit=False)
 
         for modified_file in modified_files:
