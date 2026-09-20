@@ -241,6 +241,9 @@ def execute_organization_plan(organization_plan):
         except FileNotFoundError:
             log_operation(source, op_type, "failed", destination, "File not found")
             continue
+        except FileExistsError:
+            log_operation(source, op_type, "failed", destination, "Destination already exists")
+            continue
         except PermissionError:
             log_operation(source, op_type, "failed", destination, "Permission denied")
             continue

@@ -9,6 +9,8 @@ def undo_move(log_entry):
             log_operation(log_entry["new_path"], "move", "success", log_entry["original_path"])
         except FileNotFoundError:
             log_operation(log_entry["new_path"], "move", "failed", log_entry["original_path"], "File not found")
+        except FileExistsError:
+            log_operation(log_entry["new_path"], "move", "failed", log_entry["original_path"], "File already exists at original location")
         except PermissionError:
             log_operation(log_entry["new_path"], "move", "failed", log_entry["original_path"], "Permission denied")
         except (ValueError, OSError) as e:
@@ -21,6 +23,8 @@ def undo_rename(log_entry):
             log_operation(log_entry["new_path"], "rename", "success", log_entry["original_path"])
         except FileNotFoundError:
             log_operation(log_entry["new_path"], "rename", "failed", log_entry["original_path"], "File not found")
+        except FileExistsError:
+            log_operation(log_entry["new_path"], "rename", "failed", log_entry["original_path"], "File already exists at original location")
         except PermissionError:
             log_operation(log_entry["new_path"], "rename", "failed", log_entry["original_path"], "Permission denied")
         except (ValueError, OSError) as e:

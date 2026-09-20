@@ -32,8 +32,9 @@ def read_logs():
 
 def read_last_change():
     if not LOG_FILE.exists():
-        return []
+        return {}
     
+    last_change = {}
     with open(LOG_FILE, "r", encoding="utf-8") as f:
         lines = f.readlines()
         if lines:

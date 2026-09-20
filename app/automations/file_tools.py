@@ -77,6 +77,8 @@ def move_file(source, destination):
     source = Path(source).resolve()
     destination = Path(destination).resolve()
 
+    if destination.exists():
+        raise FileExistsError(f"Destination already exists: {destination}")
     if not source.exists():
         raise FileNotFoundError(f"Source file does not exist: {source}")
     if not source.is_file():
@@ -89,14 +91,18 @@ def move_file(source, destination):
 def rename_file(path, new_name):
     file = validate_file_path(path)
     new_path = file.with_name(new_name)
+    if new_path.exists():
+        raise FileExistsError(f"Destination already exists: {new_path}")
     file.rename(new_path)
     return new_path
+
 
 def format_size(size):
     for unit in ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]:
         if size < 1024:
             return f"{size:.2f} {unit}"
         size /= 1024
+    return f"{size:.2f} YB"
 
 def get_folder_count(path):
     directory = validate_directory(path)
