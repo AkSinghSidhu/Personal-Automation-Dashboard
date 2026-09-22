@@ -50,6 +50,25 @@ def preview_category_distribution(distribution):
     print(f"  {'Total':<18} {total_files:>6} {format_size(total_size):>12} {'100.0%':>6}")
     print("=" * width)
 
+def get_largest_files(path, limit=10):
+    directory = validate_directory(path)
+    large_files = []
+
+    for file in directory.rglob("*"):
+        try:
+            if file.is_file():
+                size = get_file_size(file)
+                large_files.append({
+                    "file": file,
+                    "size": size
+                })
+        except OSError:
+            continue
+
+    files_sorted_by_size = sorted(large_files, key=lambda item: item["size"], reverse=True)
+    top_largest_files = files_sorted_by_size[:limit]
+
+    return top_largest_files
 
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
