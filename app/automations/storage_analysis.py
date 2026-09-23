@@ -70,7 +70,32 @@ def get_largest_files(path, limit=10):
 
     return top_largest_files
 
+def preview_largest_files(largest_files):
+    width = 60
+    title = "LARGEST FILES"
+
+    print("=" * width)
+    print(title.center(width))
+    print("=" * width)
+
+    if not largest_files:
+        print("  (No files found)")
+        print("=" * width)
+        return
+
+    total_size = 0
+    for rank, file in enumerate(largest_files, 1):
+        print(f"  #{rank:<2} {file['file'].name:<25} -> {format_size(file['size']):>10}")
+        total_size += file["size"]
+
+    print("-" * width)
+    print(f"  Total Size: {format_size(total_size)}")
+    print("=" * width)
+
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
     distribution = get_category_distribution(folder_path)
     preview_category_distribution(distribution)
+
+    largest_files = get_largest_files(folder_path)
+    preview_largest_files(largest_files)
