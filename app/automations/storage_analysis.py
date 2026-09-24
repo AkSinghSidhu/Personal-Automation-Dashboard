@@ -1,4 +1,4 @@
-from .file_tools import validate_directory, get_file_size, format_size
+from .file_tools import validate_directory, get_file_size, format_size, get_folder_size
 from .file_categories import get_file_category
 
 def get_category_distribution(path):
@@ -92,6 +92,48 @@ def preview_largest_files(largest_files):
     print(f"  Total Size: {format_size(total_size)}")
     print("=" * width)
 
+def get_largest_folders(path, limit=5):
+    directory = validate_directory(path)
+    large_folders = []
+
+    for folder in directory.glob("*"):
+        try:
+            if folder.is_dir():
+                size = get_folder_size(folder)
+                large_folders.append({
+                    "folder": folder,
+                    "size": size
+                })
+        except OSError:
+            continue
+
+    folders_sorted_by_size = sorted(large_folders, key=lambda item: item["size"], reverse=True)
+    top_largest_folders = folders_sorted_by_size[:limit]
+
+    return top_largest_folders
+
+def preview_largest_folders(largest_folders):
+    width = 60
+    title = "LARGEST FOLDERS"
+
+    print("=" * width)
+    print(title.center(width))
+    print("=" * width)
+
+    if not largest_folders:
+        print("  (No folders found)")
+        print("=" * width)
+        return
+
+    total_size = 0
+    for rank, folder in enumerate(largest_folders, 1):
+        print(f"  #{rank:<2} {folder['folder'].name:<25} -> {format_size(folder['size']):>10}")
+        total_size += folder["size"]
+
+    print("-" * width)
+    print(f"  Total Size: {format_size(total_size)}")
+    print("=" * width)
+
 if __name__ == "__main__":
     folder_path = input("Enter folder path: ")
     distribution = get_category_distribution(folder_path)
@@ -99,3 +141,6 @@ if __name__ == "__main__":
 
     largest_files = get_largest_files(folder_path)
     preview_largest_files(largest_files)
+
+    largest_folders = get_largest_folders(folder_path)
+    preview_largest_folders(largest_folders)
