@@ -46,6 +46,36 @@ def inspect_path(path):
         "is_hidden": content.name.startswith(".")
     }
 
+def preview_inspection(metadata):
+    width = 60
+    title = "FILE/FOLDER METADATA PREVIEW"
+
+    print("=" * width)
+    print(title.center(width))
+    print("=" * width)
+
+    if not metadata:
+        print("  (No metadata found)")
+        print("=" * width)
+        return
+
+    print(f"  • {'name':<16} -> {metadata['name']}")
+    print(f"  • {'path':<16} -> {metadata['path']}")
+    print(f"  • {'type':<16} -> {metadata['type']}")
+    print(f"  • {'category':<16} -> {metadata['category']}")
+    print(f"  • {'size':<16} -> {metadata['formatted_size']}")
+    print(f"  • {'extension':<16} -> {metadata['extension'] or 'N/A'}")
+    print(f"  • {'mime_type':<16} -> {metadata['mime_type'] or 'N/A'}")
+    print(f"  • {'permissions':<16} -> {metadata['permissions']}")
+    print(f"  • {'created_on':<16} -> {metadata['created_time']}")
+    print(f"  • {'modified_on':<16} -> {metadata['modified_time']}")
+    print(f"  • {'hidden':<16} -> {'Yes' if metadata['is_hidden'] else 'No'}")
+
+    print("=" * width)
+
+
 if __name__ == "__main__":
     path = input("Enter path (file or folder): ")
-    print(inspect_path(path))
+    metadata = inspect_path(path)
+    preview_inspection(metadata)
+
