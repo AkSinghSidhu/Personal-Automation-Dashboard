@@ -1,5 +1,5 @@
 from pathlib import Path
-from .file_tools import get_empty_directories
+from .file_tools import get_empty_directories, get_old_files
 from .logger import log_operation
 
 def preview_empty_directories(empty_dirs):
@@ -42,8 +42,47 @@ def delete_empty_directories(empty_dirs):
 
     return deleted_folders
 
+def preview_old_files(old_files, days):
+    width = 60
+    title = f"OLD FILES (OLDER THAN {days} DAYS)"
+
+    print("=" * width)
+    print(title.center(width))
+    print("=" * width)
+
+    if not old_files:
+        print("  (No old files found)")
+        print("=" * width)
+        return
+
+    total_files = 0
+    for file in old_files:
+        print(f"  • {file["file"]}")
+        total_files += 1
+
+    print("-" * width)
+    print(f"  Total old files found: {total_files}")
+    print("=" * width)
+
+def delete_old_files(old_files):
+    deleted_files = []
+    for item in old_files:
+        file_path = item["file"]
+        try:
+            file_path.unlink(missing_ok=True)
+            deleted_files.append(file_path)
+            log_operation(file_path, "delete_file", "success")
+        except OSError as e:
+            log_operation(file_path, "delete_file", "failed", error=str(e))
+    return deleted_files
+
 if __name__ == "__main__":
     empty_dirs = get_empty_directories(".")
     preview_empty_directories(empty_dirs)
     delete_empty_directories(empty_dirs)
     print("\nCleanup Complete!")
+
+    folder = input("Enter folder path: ")
+    days = int(input("Enter the number of days: "))
+    old_files = get_old_files(folder, days)
+    preview_old_files(old_files, days)
