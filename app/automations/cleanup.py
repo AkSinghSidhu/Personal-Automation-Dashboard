@@ -56,18 +56,28 @@ def preview_old_files(old_files, days):
         return
 
     total_files = 0
-    for file in old_files:
-        print(f"  • {file["file"]}")
+    for idx, file in enumerate(old_files, 1):
+        print(f"  [{idx}] {file['file']}")
         total_files += 1
 
     print("-" * width)
     print(f"  Total old files found: {total_files}")
     print("=" * width)
 
-def delete_old_files(old_files):
+def select_files_by_index(files_list, indices_str):
+    selected = []
+    for part in indices_str.split(","):
+        part = part.strip()
+        if part.isdigit():
+            idx = int(part) - 1
+            if 0 <= idx < len(files_list):
+                selected.append(files_list[idx])
+    return selected
+
+def delete_selected_files(selected_files):
     deleted_files = []
-    for item in old_files:
-        file_path = item["file"]
+    for item in selected_files:
+        file_path = item["file"] if isinstance(item, dict) else Path(item)
         try:
             file_path.unlink(missing_ok=True)
             deleted_files.append(file_path)
@@ -86,3 +96,13 @@ if __name__ == "__main__":
     days = int(input("Enter the number of days: "))
     old_files = get_old_files(folder, days)
     preview_old_files(old_files, days)
+    
+    if old_files:
+        choice = input("\nEnter file numbers to delete (e.g. 1, 3) or 'all': ")
+        if choice.strip().lower() == "all":
+            selected = old_files
+        else:
+            selected = select_files_by_index(old_files, choice)
+        if selected:
+            deleted = delete_selected_files(selected)
+            print(f"Deleted {len(deleted)} file(s).")
