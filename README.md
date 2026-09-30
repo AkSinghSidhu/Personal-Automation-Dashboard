@@ -1,3 +1,4 @@
+
 # Personal Automation Dashboard
 
 A Python-based collection of useful automation tools for everyday file and system management.
@@ -7,6 +8,7 @@ A Python-based collection of useful automation tools for everyday file and syste
 ### Added
 
 **File Tools (`file_tools.py`)**
+
 * ✓ Folder and file size calculator
 * ✓ Human-readable size formatting (B → KB → MB → GB → TB → PB+)
 * ✓ Recursive folder and file counter
@@ -28,6 +30,7 @@ A Python-based collection of useful automation tools for everyday file and syste
 * ✓ Safe file renaming (`rename_file`) preserving parent directory
 
 **File Organizer (`file_categories.py`)**
+
 * ✓ 18-category file classification system (Images, Videos, Audio, Documents, Code, etc.)
 * ✓ File category detection by extension
 * ✓ Destination path calculation
@@ -43,6 +46,7 @@ A Python-based collection of useful automation tools for everyday file and syste
 * ✓ Comprehensive error handling (permission errors, missing files, disk errors)
 
 **Duplicate Finder (`duplicate_finder.py`)**
+
 * ✓ High-performance 3-pass duplicate scanning (File Size → Partial Hash → Full Hash)
 * ✓ Size-first grouping (eliminates unique files without hashing)
 * ✓ Partial hashing (64 KB chunk check to filter out non-matching candidates quickly)
@@ -51,12 +55,14 @@ A Python-based collection of useful automation tools for everyday file and syste
 * ✓ Total reclaimable / wasted storage calculation
 
 **Operation Logger (`logger.py`)**
+
 * ✓ Structured JSON-Lines operation logging to `app/logs/operations.jsonl`
 * ✓ Logs operation type (`move`, `rename_and_move`, `skip_duplicate`, `undo`), timestamp, paths, status, and error messages
 * ✓ Log reader utility (`read_logs`) returning structured log records safely
 * ✓ Quick retrieval of the most recent operation (`read_last_change`)
 
 **Undo & Rollback Engine (`undo.py`)**
+
 * ✓ Reverses moves and auto-renamed moves using the operation log as ground truth
 * ✓ Restores files from `new_path` back to `original_path`
 * ✓ Restores original filenames for collision-renamed files in a single step
@@ -64,39 +70,71 @@ A Python-based collection of useful automation tools for everyday file and syste
 * ✓ Dedicated undo logging for tracking rollback history
 
 **Zip Archiver (`archiver.py`)**
+
 * ✓ File list validation filtering out non-existent or inaccessible files
 * ✓ Zip archive compression with `ZIP_DEFLATED`
 * ✓ Clean archive root structure using relative archive names (`arcname`)
 * ✓ Configurable output path with automatic parent directory creation
 
 **Directory Size Caching (`directory_cache.py`)**
+
 * ✓ SQLite + SQLAlchemy database caching for directory tree sizes
 * ✓ Fast query layer for instant macroscopic folder size lookups
+
+**Storage Analysis (`storage_analysis.py`)**
+
+* ✓ Category distribution with file counts, total size, and percentage breakdown
+* ✓ Top-N largest files ranking across full directory trees
+* ✓ Top-N largest subdirectories ranking by recursive size
+* ✓ Formatted CLI preview tables with aligned sizes and totals
+
+**File Inspector (`file_inspector.py`)**
+
+* ✓ Deep filesystem metadata inspection for both files and directories
+* ✓ Detects file category, raw and formatted size, extension, and MIME type
+* ✓ Unix file permissions in octal notation (`0o644`, `0o755`)
+* ✓ Creation and modification timestamps with cross-platform support
+* ✓ Clean key-value metadata preview card
+
+**File Cleanup Tools (`cleanup.py`)**
+
+* ✓ Empty directory preview and safe deepest-first deletion
+* ✓ Old file detection and numbered preview
+* ✓ Selective file deletion by index with user confirmation
+* ✓ Full operation logging to `operations.jsonl` for every deleted file and directory
+
+**Web Application (`app/__init__.py`, `run.py`)**
+
+* ✓ Flask application factory (`create_app`)
+* ✓ Base server setup and health check route
 
 ### To Add
 
 * ✗ Duplicate file deletion / cleanup action (delete duplicates, keep original)
-* ✗ Storage analysis dashboard (category distribution, largest files breakdown)
-* ✗ File cleanup tools (automated temporary file scanner, empty directory cleaner)
+* ✗ Web Dashboard UI & API routes (Stage 6)
 * ✗ Batch file renamer (prefix, suffix, sequential numbering, find-and-replace)
 * ✗ Automated test suite (`unittest` / `pytest`)
-* ✗ GUI / Web interface (Stage 6)
 
 ## Project Structure
 
 ```text
 Personal-Automation-Dashboard/
 ├── app/
+│   ├── __init__.py
 │   ├── automations/
 │   │   ├── archiver.py
+│   │   ├── cleanup.py
 │   │   ├── directory_cache.py
 │   │   ├── duplicate_finder.py
 │   │   ├── file_categories.py
+│   │   ├── file_inspector.py
 │   │   ├── file_tools.py
 │   │   ├── logger.py
+│   │   ├── storage_analysis.py
 │   │   └── undo.py
 │   └── logs/
 │       └── operations.jsonl
+├── run.py
 └── README.md
 ```
 
