@@ -1,3 +1,4 @@
+from flask import render_template
 from flask import Flask, jsonify
 from .routes import api
 
@@ -6,10 +7,7 @@ def create_app():
 
     @app.route("/")
     def index():
-        return jsonify({
-            "status": "online",
-            "name": "Personal Automation Dashboard"
-        })
+        return render_template("index.html")
     
     app.register_blueprint(api)
     return app
