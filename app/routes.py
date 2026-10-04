@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify
-from .automations.file_tools import format_size
+from .automations.file_tools import get_file_size, format_size
 from .automations.file_inspector import inspect_path
 from .automations.storage_analysis import get_category_distribution, get_largest_files
+from .automations.duplicate_finder import find_duplicate_files
+
 api = Blueprint("api", __name__, url_prefix="/api")
 
 @api.route("/inspect")
@@ -35,3 +37,34 @@ def storage():
         return jsonify({"error": f"Path not found: {folder_path}"}), 404
     except NotADirectoryError:
         return jsonify({"error": f"Path is not a directory: {folder_path}"}), 400
+
+@api.route("/duplicates")
+def duplicates():
+    folder_path = request.args.get("path")
+
+    if not folder_path:
+        return jsonify({"error": "Missing 'path' query parameter"}), 400
+    
+    try:
+        duplicate_files = find_duplicate_files(folder_path)
+
+        groups = []
+        for file_hash, files in duplicate_files.items():
+            file_size = get_file_size(files[0])
+            groups.append({
+                "hash": file_hash,
+                "size": file_size,
+                "formatted_size": format_size(file_size),
+                "files": [str(f) for f in files]
+            })
+
+        return jsonify({
+            "total_groups": len(groups),
+            "groups": groups
+        })
+
+    except FileNotFoundError:
+        return jsonify({"error": f"Path not found: {folder_path}"}), 404
+    except NotADirectoryError:
+        return jsonify({"error": f"Path is not a directory: {folder_path}"}), 400
+
