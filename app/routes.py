@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from .automations.file_tools import get_file_size, format_size
+from .automations.file_categories import create_organization_plan, execute_organization_plan
 from .automations.file_inspector import inspect_path
-from .automations.storage_analysis import get_category_distribution, get_largest_files
+from .automations.storage_analysis import get_category_distribution
 from .automations.duplicate_finder import find_duplicate_files
 
 api = Blueprint("api", __name__, url_prefix="/api")
@@ -68,3 +69,45 @@ def duplicates():
     except NotADirectoryError:
         return jsonify({"error": f"Path is not a directory: {folder_path}"}), 400
 
+@api.route("/organise/create")
+def organise():
+    folder_path = request.args.get("path")
+
+    if not folder_path:
+        return jsonify({"error": "Missing 'path' query parameter"}), 400
+    
+    try:
+        organization_plan = create_organization_plan(folder_path)
+        
+        serialized_plan = [
+            {
+                "file": str(item["file"]),
+                "filename": item["file"].name,
+                "category": item["category"],
+                "destination": str(item["destination"])
+            }
+            for item in organization_plan
+        ]
+        return jsonify(serialized_plan)
+
+    except FileNotFoundError:
+        return jsonify({"error": f"Path not found: {folder_path}"}), 404
+    except NotADirectoryError:
+        return jsonify({"error": f"Path is not a directory: {folder_path}"}), 400
+
+@api.route("/organise/execute", methods=["POST"])
+def execute_organise():
+    data = request.get_json() or {}
+    folder_path = data.get("path")
+
+    if not folder_path:
+        return jsonify({"error": "Missing 'path' in request body"}), 400
+
+    try:
+        plan = create_organization_plan(folder_path)
+        execute_organization_plan(plan)
+        return jsonify({"status": "success", "message": "Files organized successfully"})
+    except FileNotFoundError:
+        return jsonify({"error": f"Path not found: {folder_path}"}), 404
+    except NotADirectoryError:
+        return jsonify({"error": f"Path is not a directory: {folder_path}"}), 400
