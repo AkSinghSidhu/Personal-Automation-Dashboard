@@ -4,6 +4,7 @@ from .automations.file_categories import create_organization_plan, execute_organ
 from .automations.file_inspector import inspect_path
 from .automations.storage_analysis import get_category_distribution
 from .automations.duplicate_finder import find_duplicate_files
+from .automations.logger import read_logs
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
@@ -111,3 +112,15 @@ def execute_organise():
         return jsonify({"error": f"Path not found: {folder_path}"}), 404
     except NotADirectoryError:
         return jsonify({"error": f"Path is not a directory: {folder_path}"}), 400
+
+@api.route("/logs")
+def logs():
+    all_logs = read_logs()
+
+    limit = request.args.get("limit", default=50, type=int)
+    recent_logs = all_logs[-limit:][::-1]
+    
+    return jsonify({
+        "total": len(all_logs),
+        "logs": recent_logs
+    })
