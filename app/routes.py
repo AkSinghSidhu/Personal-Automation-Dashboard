@@ -4,7 +4,8 @@ from .automations.file_categories import create_organization_plan, execute_organ
 from .automations.file_inspector import inspect_path
 from .automations.storage_analysis import get_category_distribution
 from .automations.duplicate_finder import find_duplicate_files
-from .automations.logger import read_logs
+from .automations.logger import read_logs, read_last_change
+from .automations.undo import undo_move, undo_rename
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
@@ -124,3 +125,22 @@ def logs():
         "total": len(all_logs),
         "logs": recent_logs
     })
+
+@api.route("/undo", methods=["POST"])
+def undo():
+    last_change = read_last_change()
+
+    if not last_change:
+        return jsonify({"error": f"No operations in log to undo."}), 400
+    
+    try:
+        if last_change["operation"] in ("move", "rename_and_move"):
+            undo_move(last_change)
+            return jsonify({"status": "success", "message": "Undo complete"})
+        elif last_change["operation"] == "rename":
+            undo_rename(last_change)
+            return jsonify({"status": "success", "message": "Undo complete"})
+        else:
+            return jsonify({"error": f"Operation '{last_change['operation']}' cannot be undone"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
