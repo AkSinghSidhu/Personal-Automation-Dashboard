@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from .automations.file_tools import get_file_size, format_size
+from .automations.file_tools import get_file_size, format_size, get_empty_directories, get_old_files
 from .automations.file_categories import create_organization_plan, execute_organization_plan
 from .automations.file_inspector import inspect_path
 from .automations.storage_analysis import get_category_distribution
@@ -144,3 +144,32 @@ def undo():
             return jsonify({"error": f"Operation '{last_change['operation']}' cannot be undone"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@api.route("/cleanup/preview")
+def cleanup_preview():
+    folder_path = request.args.get("path")
+    days = request.args.get("days", default=30, type=int)
+
+    if not folder_path:
+        return jsonify({"error": "Missing 'path' query parameter"}), 400
+    
+    try:
+        empty_dirs = [str(d) for d in get_empty_directories(folder_path)]
+        old_files_list = [
+            {
+                "file": str(item["file"]),
+                "filename": item["file"].name,
+                "modified_on": item["modified_on"].strftime("%Y-%m-%d %H:%M:%S")
+            }
+            for item in get_old_files(folder_path, days)
+        ]
+        return jsonify({
+            "empty_dirs": empty_dirs,
+            "total_empty_dirs": len(empty_dirs),
+            "old_files": old_files_list,
+            "total_old_files": len(old_files_list)
+        })
+    except FileNotFoundError:
+        return jsonify({"error": f"Path not found: {folder_path}"}), 404
+    except NotADirectoryError:
+        return jsonify({"error": f"Path is not a directory: {folder_path}"}), 400
