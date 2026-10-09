@@ -6,6 +6,7 @@ from .automations.storage_analysis import get_category_distribution
 from .automations.duplicate_finder import find_duplicate_files
 from .automations.logger import read_logs, read_last_change
 from .automations.undo import undo_move, undo_rename
+from .automations.cleanup import delete_empty_directories, delete_selected_files
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
@@ -173,3 +174,35 @@ def cleanup_preview():
         return jsonify({"error": f"Path not found: {folder_path}"}), 404
     except NotADirectoryError:
         return jsonify({"error": f"Path is not a directory: {folder_path}"}), 400
+
+@api.route("/cleanup/delete", methods=["POST"])
+def execute_cleanup():
+    data = request.get_json() or {}
+    folder_path = data.get("path")
+    empty_dirs = data.get("empty_dirs")
+    files = data.get("files", [])
+
+    if folder_path and empty_dirs is None and data.get("delete_empty_dirs"):
+        try:
+            empty_dirs = [str(d) for d in get_empty_directories(folder_path)]
+        except (FileNotFoundError, NotADirectoryError) as e:
+            return jsonify({"error": str(e)}), 400
+
+    if not empty_dirs and not files:
+        return jsonify({"error": "No empty directories or files specified for deletion"}), 400
+
+    deleted_dirs = []
+    if empty_dirs:
+        deleted_dirs = [str(d) for d in delete_empty_directories(empty_dirs)]
+
+    deleted_files = []
+    if files:
+        deleted_files = [str(f) for f in delete_selected_files(files)]
+
+    return jsonify({
+        "status": "success",
+        "deleted_empty_directories": deleted_dirs,
+        "total_deleted_directories": len(deleted_dirs),
+        "deleted_files": deleted_files,
+        "total_deleted_files": len(deleted_files)
+    })
