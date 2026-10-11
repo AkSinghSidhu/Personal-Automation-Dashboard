@@ -1,4 +1,3 @@
-
 # Personal Automation Dashboard
 
 A Python-based collection of useful automation tools for everyday file and system management.
@@ -101,19 +100,57 @@ A Python-based collection of useful automation tools for everyday file and syste
 * ✓ Empty directory preview and safe deepest-first deletion
 * ✓ Old file detection and numbered preview
 * ✓ Selective file deletion by index with user confirmation
+* ✓ Duplicate file cleanup engine with customizable original selection strategies (oldest, newest, shortest path)
+* ✓ Duplicate cleanup plan generation and formatted terminal preview
+* ✓ Safe duplicate removal preserving original copies with full operation logging
 * ✓ Full operation logging to `operations.jsonl` for every deleted file and directory
 
-**Web Application (`app/__init__.py`, `run.py`)**
+**Web Application & REST API (`app/routes.py`, `fastapi_app.py`, `run.py`)**
 
-* ✓ Flask application factory (`create_app`)
-* ✓ Base server setup and health check route
+* ✓ Dual Backend Architecture: Fully ported across both **Flask** and **FastAPI**
+* ✓ Automatic Swagger / OpenAPI interactive documentation UI at `/docs` (FastAPI)
+* ✓ Pydantic request body validation and schemas (`CleanupRequest`)
+* ✓ 10 REST API Endpoints implemented and tested:
+  * `GET /api/inspect?path=...` — Metadata, permissions, MIME type, and category inspection
+  * `GET /api/storage?path=...` — Category distribution, total file counts, and storage metrics
+  * `GET /api/duplicates?path=...` — 3-pass hash-grouped duplicate detection clusters
+  * `POST /api/duplicates/cleanup?path=...&strategy=...` — Automated duplicate deletion preserving 1 original
+  * `GET /api/organise/create?path=...` — Dry-run preview of organization moves
+  * `POST /api/organise/execute?path=...` — Safe plan execution with collision handling
+  * `GET /api/logs?limit=...` — Reverse-chronological structured operation log history
+  * `POST /api/undo` — Ground-truth atomic rollback for move and rename operations
+  * `GET /api/cleanup/preview?path=...&days=...` — Preview empty directories and stale files
+  * `POST /api/cleanup/delete` — Selective or automated deletion of empty folders and old files
 
 ### To Add
 
-* ✗ Duplicate file deletion / cleanup action (delete duplicates, keep original)
-* ✗ Web Dashboard UI & API routes (Stage 6)
+* ✗ Custom Web Dashboard Frontend UI (Stage 6)
 * ✗ Batch file renamer (prefix, suffix, sequential numbering, find-and-replace)
 * ✗ Automated test suite (`unittest` / `pytest`)
+
+## Running the Application
+
+### 1. FastAPI (Recommended — Interactive Docs)
+
+Start the FastAPI server with live reload:
+
+```bash
+uvicorn fastapi_app:app --reload
+```
+
+* **API Base:** `http://127.0.0.1:8000`
+* **Interactive Swagger UI:** `http://127.0.0.1:8000/docs`
+* **Redoc Alternative:** `http://127.0.0.1:8000/redoc`
+
+### 2. Flask
+
+Start the Flask development server:
+
+```bash
+python run.py
+```
+
+* **API Base:** `http://127.0.0.1:5000`
 
 ## Project Structure
 
@@ -121,6 +158,7 @@ A Python-based collection of useful automation tools for everyday file and syste
 Personal-Automation-Dashboard/
 ├── app/
 │   ├── __init__.py
+│   ├── routes.py            # Flask API blueprint (9 endpoints)
 │   ├── automations/
 │   │   ├── archiver.py
 │   │   ├── cleanup.py
@@ -134,7 +172,8 @@ Personal-Automation-Dashboard/
 │   │   └── undo.py
 │   └── logs/
 │       └── operations.jsonl
-├── run.py
+├── fastapi_app.py           # FastAPI application & Pydantic models (9 endpoints)
+├── run.py                   # Flask runner
 └── README.md
 ```
 

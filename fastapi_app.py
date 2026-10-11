@@ -8,7 +8,7 @@ from app.automations.storage_analysis import get_category_distribution
 from app.automations.duplicate_finder import find_duplicate_files
 from app.automations.logger import read_logs, read_last_change
 from app.automations.undo import undo_move, undo_rename
-from app.automations.cleanup import delete_empty_directories, delete_selected_files
+from app.automations.cleanup import delete_empty_directories, delete_selected_files, create_duplicate_cleanup_plan, execute_duplicate_cleanup
 
 app = FastAPI()
 
@@ -189,3 +189,16 @@ def execute_cleanup(payload: CleanupRequest):
         "deleted_files": deleted_files,
         "total_deleted_files": len(deleted_files)
     }
+
+@app.post("/api/duplicates/cleanup")
+def cleanup_duplicates(path: str, strategy: str = "oldest"):
+    try:
+        duplicate_groups = find_duplicate_files(path)
+        plan = create_duplicate_cleanup_plan(duplicate_groups, strategy=strategy)
+        result = execute_duplicate_cleanup(plan)
+        return result
+        
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Path not found: {path}")
+    except NotADirectoryError:
+        raise HTTPException(status_code=400, detail=f"Path is not a directory: {path}")

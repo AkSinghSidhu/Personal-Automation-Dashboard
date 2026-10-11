@@ -6,7 +6,7 @@ from .automations.storage_analysis import get_category_distribution
 from .automations.duplicate_finder import find_duplicate_files
 from .automations.logger import read_logs, read_last_change
 from .automations.undo import undo_move, undo_rename
-from .automations.cleanup import delete_empty_directories, delete_selected_files
+from .automations.cleanup import delete_empty_directories, delete_selected_files, create_duplicate_cleanup_plan, execute_duplicate_cleanup
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
@@ -66,6 +66,26 @@ def duplicates():
             "total_groups": len(groups),
             "groups": groups
         })
+
+    except FileNotFoundError:
+        return jsonify({"error": f"Path not found: {folder_path}"}), 404
+    except NotADirectoryError:
+        return jsonify({"error": f"Path is not a directory: {folder_path}"}), 400
+
+@api.route("/duplicates/cleanup", methods=["POST"])
+def cleanup_duplicates():
+    data = request.get_json(silent=True) or {}
+    folder_path = request.args.get("path") or data.get("path")
+    strategy = request.args.get("strategy") or data.get("strategy", "oldest")
+
+    if not folder_path:
+        return jsonify({"error": "Missing 'path' parameter"}), 400
+
+    try:
+        duplicate_groups = find_duplicate_files(folder_path)
+        plan = create_duplicate_cleanup_plan(duplicate_groups, strategy=strategy)
+        result = execute_duplicate_cleanup(plan)
+        return jsonify(result), 200
 
     except FileNotFoundError:
         return jsonify({"error": f"Path not found: {folder_path}"}), 404
