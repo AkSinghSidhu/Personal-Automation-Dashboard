@@ -7,6 +7,7 @@ from .automations.duplicate_finder import find_duplicate_files
 from .automations.logger import read_logs, read_last_change
 from .automations.undo import undo_move, undo_rename
 from .automations.cleanup import delete_empty_directories, delete_selected_files, create_duplicate_cleanup_plan, execute_duplicate_cleanup
+from .automations.batch_renamer import create_rename_plan, execute_rename_plan
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
@@ -226,3 +227,75 @@ def execute_cleanup():
         "deleted_files": deleted_files,
         "total_deleted_files": len(deleted_files)
     })
+
+@api.route("/rename/preview", methods=["POST"])
+def preview_rename():
+    data = request.get_json() or {}
+    folder_path = data.get("path") or request.args.get("path")
+
+    if not folder_path:
+        return jsonify({"error": "Missing 'path' parameter"}), 400
+
+    try:
+        plan = create_rename_plan(
+            folder_path,
+            prefix=data.get("prefix", ""),
+            suffix=data.get("suffix", ""),
+            find_str=data.get("find_str", ""),
+            replace_str=data.get("replace_str", ""),
+            base_name=data.get("base_name"),
+            numbering=data.get("numbering", False),
+            start_num=data.get("start_num", 1),
+            digits=data.get("digits", 3),
+            case=data.get("case"),
+            new_extension=data.get("new_extension"),
+            filter_ext=data.get("filter_ext")
+        )
+        serialized_plan = [
+            {
+                "original_file": str(item["original_file"]),
+                "original_name": item["original_name"],
+                "new_name": item["new_name"],
+                "new_path": str(item["new_path"]),
+                "status": item["status"],
+                "collision_reason": item["collision_reason"]
+            }
+            for item in plan
+        ]
+        return jsonify(serialized_plan), 200
+
+    except FileNotFoundError:
+        return jsonify({"error": f"Path not found: {folder_path}"}), 404
+    except NotADirectoryError:
+        return jsonify({"error": f"Path is not a directory: {folder_path}"}), 400
+
+@api.route("/rename/execute", methods=["POST"])
+def execute_rename():
+    data = request.get_json() or {}
+    folder_path = data.get("path") or request.args.get("path")
+
+    if not folder_path:
+        return jsonify({"error": "Missing 'path' parameter"}), 400
+
+    try:
+        plan = create_rename_plan(
+            folder_path,
+            prefix=data.get("prefix", ""),
+            suffix=data.get("suffix", ""),
+            find_str=data.get("find_str", ""),
+            replace_str=data.get("replace_str", ""),
+            base_name=data.get("base_name"),
+            numbering=data.get("numbering", False),
+            start_num=data.get("start_num", 1),
+            digits=data.get("digits", 3),
+            case=data.get("case"),
+            new_extension=data.get("new_extension"),
+            filter_ext=data.get("filter_ext")
+        )
+        result = execute_rename_plan(plan)
+        return jsonify(result), 200
+
+    except FileNotFoundError:
+        return jsonify({"error": f"Path not found: {folder_path}"}), 404
+    except NotADirectoryError:
+        return jsonify({"error": f"Path is not a directory: {folder_path}"}), 400

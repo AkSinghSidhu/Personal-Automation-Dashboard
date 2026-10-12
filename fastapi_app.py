@@ -9,6 +9,7 @@ from app.automations.duplicate_finder import find_duplicate_files
 from app.automations.logger import read_logs, read_last_change
 from app.automations.undo import undo_move, undo_rename
 from app.automations.cleanup import delete_empty_directories, delete_selected_files, create_duplicate_cleanup_plan, execute_duplicate_cleanup
+from app.automations.batch_renamer import create_rename_plan, execute_rename_plan
 
 app = FastAPI()
 
@@ -18,6 +19,21 @@ class CleanupRequest(BaseModel):
     empty_dirs: Optional[list[str]] = None
     files: Optional[list[str]] = None
     delete_empty_dirs: Optional[bool] = False
+
+
+class RenameRequest(BaseModel):
+    path: str
+    prefix: Optional[str] = ""
+    suffix: Optional[str] = ""
+    find_str: Optional[str] = ""
+    replace_str: Optional[str] = ""
+    base_name: Optional[str] = None
+    numbering: Optional[bool] = False
+    start_num: Optional[int] = 1
+    digits: Optional[int] = 3
+    case: Optional[str] = None
+    new_extension: Optional[str] = None
+    filter_ext: Optional[str] = None
 
 @app.get("/api/inspect")
 def inspect(path: str):
@@ -202,3 +218,60 @@ def cleanup_duplicates(path: str, strategy: str = "oldest"):
         raise HTTPException(status_code=404, detail=f"Path not found: {path}")
     except NotADirectoryError:
         raise HTTPException(status_code=400, detail=f"Path is not a directory: {path}")
+
+@app.post("/api/rename/preview")
+def rename_preview(payload: RenameRequest):
+    try:
+        plan = create_rename_plan(
+            payload.path,
+            prefix=payload.prefix,
+            suffix=payload.suffix,
+            find_str=payload.find_str,
+            replace_str=payload.replace_str,
+            base_name=payload.base_name,
+            numbering=payload.numbering,
+            start_num=payload.start_num,
+            digits=payload.digits,
+            case=payload.case,
+            new_extension=payload.new_extension,
+            filter_ext=payload.filter_ext
+        )
+        return [
+            {
+                "original_file": str(item["original_file"]),
+                "original_name": item["original_name"],
+                "new_name": item["new_name"],
+                "new_path": str(item["new_path"]),
+                "status": item["status"],
+                "collision_reason": item["collision_reason"]
+            }
+            for item in plan
+        ]
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Path not found: {payload.path}")
+    except NotADirectoryError:
+        raise HTTPException(status_code=400, detail=f"Path is not a directory: {payload.path}")
+
+@app.post("/api/rename/execute")
+def rename_execute(payload: RenameRequest):
+    try:
+        plan = create_rename_plan(
+            payload.path,
+            prefix=payload.prefix,
+            suffix=payload.suffix,
+            find_str=payload.find_str,
+            replace_str=payload.replace_str,
+            base_name=payload.base_name,
+            numbering=payload.numbering,
+            start_num=payload.start_num,
+            digits=payload.digits,
+            case=payload.case,
+            new_extension=payload.new_extension,
+            filter_ext=payload.filter_ext
+        )
+        result = execute_rename_plan(plan)
+        return result
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Path not found: {payload.path}")
+    except NotADirectoryError:
+        raise HTTPException(status_code=400, detail=f"Path is not a directory: {payload.path}")

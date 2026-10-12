@@ -105,16 +105,29 @@ A Python-based collection of useful automation tools for everyday file and syste
 * ✓ Safe duplicate removal preserving original copies with full operation logging
 * ✓ Full operation logging to `operations.jsonl` for every deleted file and directory
 
+**Batch File Renamer (`batch_renamer.py`)**
+
+* ✓ Multi-rule name generation engine (prefix, suffix, find-and-replace, custom base name)
+* ✓ Sequential number indexing with configurable start number and zero-padding (`_001`, `_002`)
+* ✓ Letter case transformations (lowercase, uppercase, title case) and extension remapping
+* ✓ Extension-based filtering (`filter_ext`) for targeted batch processing
+* ✓ Proactive collision detection checking against existing disk files and intra-batch name conflicts
+* ✓ Non-destructive dry-run rename plan creation and aligned terminal preview table
+* ✓ Atomic per-file execution with individual failure isolation
+* ✓ Full integration with operation logger (`operations.jsonl`) enabling 100% undo via `undo.py`
+
 **Web Application & REST API (`app/routes.py`, `fastapi_app.py`, `run.py`)**
 
 * ✓ Dual Backend Architecture: Fully ported across both **Flask** and **FastAPI**
 * ✓ Automatic Swagger / OpenAPI interactive documentation UI at `/docs` (FastAPI)
-* ✓ Pydantic request body validation and schemas (`CleanupRequest`)
-* ✓ 10 REST API Endpoints implemented and tested:
+* ✓ Pydantic request body validation and schemas (`CleanupRequest`, `RenameRequest`)
+* ✓ 12 REST API Endpoints implemented and tested:
   * `GET /api/inspect?path=...` — Metadata, permissions, MIME type, and category inspection
   * `GET /api/storage?path=...` — Category distribution, total file counts, and storage metrics
   * `GET /api/duplicates?path=...` — 3-pass hash-grouped duplicate detection clusters
   * `POST /api/duplicates/cleanup?path=...&strategy=...` — Automated duplicate deletion preserving 1 original
+  * `POST /api/rename/preview` — Dry-run preview of batch renames and collision detection
+  * `POST /api/rename/execute` — Execute batch renaming with rollback logging
   * `GET /api/organise/create?path=...` — Dry-run preview of organization moves
   * `POST /api/organise/execute?path=...` — Safe plan execution with collision handling
   * `GET /api/logs?limit=...` — Reverse-chronological structured operation log history
@@ -125,7 +138,6 @@ A Python-based collection of useful automation tools for everyday file and syste
 ### To Add
 
 * ✗ Custom Web Dashboard Frontend UI (Stage 6)
-* ✗ Batch file renamer (prefix, suffix, sequential numbering, find-and-replace)
 * ✗ Automated test suite (`unittest` / `pytest`)
 
 ## Running the Application
@@ -158,9 +170,10 @@ python run.py
 Personal-Automation-Dashboard/
 ├── app/
 │   ├── __init__.py
-│   ├── routes.py            # Flask API blueprint (9 endpoints)
+│   ├── routes.py            # Flask API blueprint (12 endpoints)
 │   ├── automations/
 │   │   ├── archiver.py
+│   │   ├── batch_renamer.py
 │   │   ├── cleanup.py
 │   │   ├── directory_cache.py
 │   │   ├── duplicate_finder.py
@@ -172,7 +185,7 @@ Personal-Automation-Dashboard/
 │   │   └── undo.py
 │   └── logs/
 │       └── operations.jsonl
-├── fastapi_app.py           # FastAPI application & Pydantic models (9 endpoints)
+├── fastapi_app.py           # FastAPI application & Pydantic models (12 endpoints)
 ├── run.py                   # Flask runner
 └── README.md
 ```
