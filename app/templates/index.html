@@ -5,16 +5,236 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Automation Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
-    <h1>Personal Automation Dashboard</h1>
-    <input id="pathInput" type="text">
-    <button id="inspectButton">Inspect</button>
-    <div id="result"></div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <header>
+        <h1>Personal Automation Dashboard</h1>
+        <p>Filesystem Intelligence & Automation Management</p>
+    </header>
+
+    <section id="path-section">
+        <h2>Target Directory</h2>
+        <form id="path-form">
+            <label for="directory-path">Directory Path:</label>
+            <input type="text" id="directory-path" name="path" placeholder="e.g. /home/user/Downloads or .">
+            <button type="submit" id="scan-button">Scan Directory</button>
+        </form>
+    </section>
+
+    <section id="modules-overview">
+        <h2>Dashboard Modules</h2>
+
+        <div id="module-storage" class="module-box">
+            <h3>Storage Overview</h3>
+            <p>Total Size: <span id="storage-total-size">--</span></p>
+            <p>Total Files: <span id="storage-total-files">--</span></p>
+            <button type="button" id="open-storage-btn">Open Storage Details</button>
+        </div>
+
+        <div id="module-duplicates" class="module-box">
+            <h3>Duplicate Finder</h3>
+            <p>Duplicate Groups: <span id="duplicate-groups-count">--</span></p>
+            <p>Wasted Space: <span id="wasted-space-size">--</span></p>
+            <button type="button" id="open-duplicates-btn">Open Duplicate Manager</button>
+        </div>
+
+        <div id="module-cleaner" class="module-box">
+            <h3>System Cleaner</h3>
+            <p>Empty Folders: <span id="empty-folders-count">--</span></p>
+            <p>Old Files: <span id="old-files-count">--</span></p>
+            <button type="button" id="open-cleaner-btn">Open Cleaner Workspace</button>
+        </div>
+
+        <div id="module-organizer" class="module-box">
+            <h3>File Organizer</h3>
+            <p>Files to Organize: <span id="organize-files-count">--</span></p>
+            <p>Categories: <span id="organize-categories-count">18 Categories</span></p>
+            <button type="button" id="open-organizer-btn">Open Organizer Plan</button>
+        </div>
+
+        <div id="module-renamer" class="module-box">
+            <h3>Batch Renamer</h3>
+            <p>Rules Configured: <span id="rename-rules-count">None</span></p>
+            <p>Target Files: <span id="rename-target-count">--</span></p>
+            <button type="button" id="open-renamer-btn">Open Renamer Studio</button>
+        </div>
+
+        <div id="module-activity" class="module-box">
+            <h3>Activity & Rollback</h3>
+            <p>Total Operations Logged: <span id="logs-total-count">--</span></p>
+            <button type="button" id="undo-button">Undo Last Operation</button>
+            <button type="button" id="open-activity-btn">View All Logs</button>
+        </div>
+    </section>
+
+    <section id="detail-windows">
+
+        <div id="storage-window" class="detail-window">
+            <h3>Storage Breakdown</h3>
+            <h4>Category Distribution</h4>
+            <table id="category-table" border="1">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Files Count</th>
+                        <th>Total Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="close-window-btn">Close</button>
+        </div>
+
+        <div id="duplicates-window" class="detail-window">
+            <h3>Duplicate Files Manager</h3>
+            <label for="cleanup-strategy">Deletion Strategy:</label>
+            <select id="cleanup-strategy" name="strategy">
+                <option value="oldest">Keep Oldest (Original)</option>
+                <option value="newest">Keep Newest</option>
+                <option value="shortest_path">Keep Shortest Path</option>
+            </select>
+            <button type="button" id="clean-duplicates-btn">Delete Duplicate Copies</button>
+            <h4>Detected Clusters</h4>
+            <table id="duplicates-table" border="1">
+                <thead>
+                    <tr>
+                        <th>Group Hash</th>
+                        <th>File Size</th>
+                        <th>Duplicate Copies</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="close-window-btn">Close</button>
+        </div>
+
+        <div id="cleaner-window" class="detail-window">
+            <h3>System Cleanup Workspace</h3>
+            <h4>Empty Directories</h4>
+            <ul id="empty-dirs-list">
+                <li>(None found)</li>
+            </ul>
+            <button type="button" id="purge-empty-dirs-btn">Delete Empty Folders</button>
+
+            <h4>Stale / Old Files</h4>
+            <label for="days-input">Modified Older Than (Days):</label>
+            <input type="number" id="days-input" name="days" value="30">
+            <button type="button" id="preview-old-files-btn">Scan Old Files</button>
+            <ul id="old-files-list">
+                <li>(None found)</li>
+            </ul>
+            <button type="button" class="close-window-btn">Close</button>
+        </div>
+
+        <div id="organizer-window" class="detail-window">
+            <h3>File Organization Plan</h3>
+            <button type="button" id="generate-organize-plan-btn">Preview Move Plan</button>
+            <button type="button" id="execute-organize-btn">Execute Organization</button>
+            <h4>Planned Moves</h4>
+            <table id="organize-plan-table" border="1">
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Category</th>
+                        <th>Destination</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="close-window-btn">Close</button>
+        </div>
+
+        <div id="renamer-window" class="detail-window">
+            <h3>Batch Renamer Studio</h3>
+            <form id="renamer-form">
+                <div>
+                    <label for="rename-prefix">Prefix:</label>
+                    <input type="text" id="rename-prefix" name="prefix" placeholder="e.g. 2026_">
+                </div>
+                <div>
+                    <label for="rename-suffix">Suffix:</label>
+                    <input type="text" id="rename-suffix" name="suffix" placeholder="e.g. _v1">
+                </div>
+                <div>
+                    <label for="rename-find">Find Text:</label>
+                    <input type="text" id="rename-find" name="find_str" placeholder="e.g. space">
+                </div>
+                <div>
+                    <label for="rename-replace">Replace With:</label>
+                    <input type="text" id="rename-replace" name="replace_str" placeholder="e.g. _">
+                </div>
+                <div>
+                    <label for="rename-numbering">Sequential Numbering:</label>
+                    <input type="checkbox" id="rename-numbering" name="numbering">
+                </div>
+                <button type="button" id="preview-rename-btn">Preview Renames</button>
+                <button type="button" id="execute-rename-btn">Apply Renames</button>
+            </form>
+            <h4>Planned Renames</h4>
+            <table id="rename-preview-table" border="1">
+                <thead>
+                    <tr>
+                        <th>Original Name</th>
+                        <th>New Name</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="close-window-btn">Close</button>
+        </div>
+
+        <div id="activity-window" class="detail-window">
+            <h3>Operations History & Logs</h3>
+            <table id="logs-table" border="1">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Operation</th>
+                        <th>Original Path</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="close-window-btn">Close</button>
+        </div>
+
+    </section>
+
 </body>
 
 </html>
