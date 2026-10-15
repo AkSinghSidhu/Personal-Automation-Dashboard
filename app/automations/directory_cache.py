@@ -1,14 +1,20 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import select
-from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker, scoped_session
 from .file_tools import validate_directory, validate_file_path, get_modification_time, build_directory_tree, get_file_size
 
-db = SQLAlchemy()
+DB_PATH = Path(__file__).resolve().parent.parent / "dashboard.db"
+engine = create_engine(f"sqlite:///{DB_PATH}")
 
-class DirectorySizeCache(db.Model):
+class Base(DeclarativeBase):
+    pass
+
+SessionLocal = sessionmaker(bind=engine)
+session = scoped_session(SessionLocal)
+
+class DirectorySizeCache(Base):
     __tablename__ = "cache"
 
     full_path: Mapped[str] = mapped_column(primary_key = True)
@@ -17,6 +23,8 @@ class DirectorySizeCache(db.Model):
     mtime: Mapped[Optional[datetime]]
     is_dir: Mapped[bool]
     parent_path: Mapped[str]
+
+Base.metadata.create_all(engine)
 
 def traverse_directory_tree(tree, current_path, results):
     
@@ -71,15 +79,15 @@ def build_cache(path):
                     is_dir = content_metadata["is_dir"],
                     parent_path = content_metadata["parent_path"]
                 )
-                db.session.add(cache)
-            db.session.commit()
+                session.add(cache)
+            session.commit()
         except Exception:
-            db.session.rollback()
+            session.rollback()
             raise
 
 def get_cached_entry(path):
     path = str(path)
-    result = db.session.execute(
+    result = session.execute(
         select(DirectorySizeCache).where(
             DirectorySizeCache.full_path == path
         )
@@ -94,7 +102,7 @@ def get_all_cached_entries(path):
     if not path.endswith("/"):
         path = f"{path}{"/"}"
 
-    result = db.session.execute(
+    result = session.execute(
         select(DirectorySizeCache).where(
             DirectorySizeCache.full_path.startswith(path)
         )
@@ -108,7 +116,7 @@ def get_direct_cached_children(path):
     path = str(path)
     path = path.rstrip("/")
 
-    result = db.session.execute(
+    result = session.execute(
         select(DirectorySizeCache).where(
             DirectorySizeCache.parent_path == path
         )
@@ -124,14 +132,14 @@ def delete_cached_entry(path, commit=True):
         if cached_entry.is_dir:
             children = get_all_cached_entries(path)
             for child in children:
-                db.session.delete(child)
-            db.session.delete(cached_entry)
+                session.delete(child)
+            session.delete(cached_entry)
             if commit:
-                db.session.commit()
+                session.commit()
         else:
-            db.session.delete(cached_entry)
+            session.delete(cached_entry)
             if commit:
-                db.session.commit()
+                session.commit()
     else:
         raise KeyError("Cached entry not found")
 
@@ -143,7 +151,7 @@ def update_cached_entry(path, commit=True):
         cached_entry.size = get_file_size(path)
         cached_entry.mtime = get_modification_time(path)
         if commit:
-            db.session.commit()
+            session.commit()
     else:
         raise KeyError("Cached entry not found")
 
@@ -152,7 +160,7 @@ def update_cached_folder_size(path, size, commit=True):
     if cached_entry:
         cached_entry.size = size
         if commit:
-            db.session.commit()
+            session.commit()
     else:
         raise KeyError("Cached entry not found")
 
@@ -180,10 +188,10 @@ def add_cached_entry(path, commit=True):
             parent_path=str(item.parent)
         )
 
-    db.session.add(cache)
+    session.add(cache)
 
     if commit:
-        db.session.commit()
+        session.commit()
 
 def rescan(path):
     directory = validate_directory(path)
@@ -258,13 +266,13 @@ def apply_changes(changes, path):
         for modified_file in modified_files:
             update_cached_entry(modified_file, commit=False)
 
-        db.session.commit()
+        session.commit()
     except Exception:
-        db.session.rollback()
+        session.rollback()
         raise
     try:
         propagate_changes_upwards(path)
-        db.session.commit()
+        session.commit()
     except Exception:
-        db.session.rollback()
+        session.rollback()
         raise

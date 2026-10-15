@@ -5,6 +5,7 @@ from app.automations.file_tools import get_file_size, format_size, get_empty_dir
 from app.automations.file_categories import create_organization_plan, execute_organization_plan
 from app.automations.file_inspector import inspect_path
 from app.automations.storage_analysis import get_category_distribution
+from app.automations.directory_cache import get_cached_entry, build_cache, get_file_changes, apply_changes
 from app.automations.duplicate_finder import find_duplicate_files
 from app.automations.logger import read_logs, read_last_change
 from app.automations.undo import undo_move, undo_rename
@@ -45,15 +46,26 @@ def inspect(path: str):
 @app.get("/api/storage")
 def storage(path: str):
     try:
+        cached_entry = get_cached_entry(path)
+        if not cached_entry:
+            build_cache(path)
+            cached_entry = get_cached_entry(path)
+        else:
+            changes = get_file_changes(path)
+            if changes["new_files"] or changes["deleted_files"] or changes["modified_files"]:
+                apply_changes(changes, path)
+                cached_entry = get_cached_entry(path)
+
         distribution = get_category_distribution(path)
         total_files = sum(d["count"] for d in distribution.values())
-        total_size = sum(d["size"] for d in distribution.values())
+        total_size = cached_entry.size if cached_entry else sum(d["size"] for d in distribution.values())
 
         return {
             "distribution": distribution,
             "total_files": total_files,
             "total_size": total_size,
-            "formatted_total_size": format_size(total_size)
+            "formatted_total_size": format_size(total_size),
+            "cached": True
         }
 
     except FileNotFoundError:

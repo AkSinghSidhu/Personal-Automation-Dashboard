@@ -3,6 +3,7 @@ from .automations.file_tools import get_file_size, format_size, get_empty_direct
 from .automations.file_categories import create_organization_plan, execute_organization_plan
 from .automations.file_inspector import inspect_path
 from .automations.storage_analysis import get_category_distribution
+from .automations.directory_cache import get_cached_entry, build_cache, get_file_changes, apply_changes
 from .automations.duplicate_finder import find_duplicate_files
 from .automations.logger import read_logs, read_last_change
 from .automations.undo import undo_move, undo_rename
@@ -32,11 +33,27 @@ def storage():
         return jsonify({"error": "Missing 'path' query parameter"}), 400
     
     try:
+        cached_entry = get_cached_entry(folder_path)
+        if not cached_entry:
+            build_cache(folder_path)
+            cached_entry = get_cached_entry(folder_path)
+        else:
+            changes = get_file_changes(folder_path)
+            if changes["new_files"] or changes["deleted_files"] or changes["modified_files"]:
+                apply_changes(changes, folder_path)
+                cached_entry = get_cached_entry(folder_path)
+
         distribution = get_category_distribution(folder_path)
         total_files = sum(d["count"] for d in distribution.values())
-        total_size = sum(d["size"] for d in distribution.values())
+        total_size = cached_entry.size if cached_entry else sum(d["size"] for d in distribution.values())
 
-        return jsonify({ "distribution": distribution, "total_files": total_files, "total_size": total_size, "formatted_total_size": format_size(total_size) })
+        return jsonify({
+            "distribution": distribution,
+            "total_files": total_files,
+            "total_size": total_size,
+            "formatted_total_size": format_size(total_size),
+            "cached": True
+        })
 
     except FileNotFoundError:
         return jsonify({"error": f"Path not found: {folder_path}"}), 404
