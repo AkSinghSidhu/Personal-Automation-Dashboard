@@ -77,8 +77,13 @@ A Python-based collection of useful automation tools for everyday file and syste
 
 **Directory Size Caching (`directory_cache.py`)**
 
-* ✓ SQLite + SQLAlchemy database caching for directory tree sizes
+* ✓ SQLite + standard SQLAlchemy 2.0 database caching for directory tree sizes
 * ✓ Fast query layer for instant macroscopic folder size lookups
+* ✓ Incremental change detection checking disk modification times (`mtime`) against database records
+* ✓ Targeted diff application updating only added, modified, or removed files
+* ✓ Upward directory size propagation bubbling size updates to parent folders
+* ✓ Database cache reset utility (`clear_cache`)
+* ✓ Framework-agnostic database engine shared across Flask, FastAPI, and CLI scripts
 
 **Storage Analysis (`storage_analysis.py`)**
 

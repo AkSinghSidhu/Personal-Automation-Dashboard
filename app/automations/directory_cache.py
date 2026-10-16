@@ -245,6 +245,10 @@ def propagate_changes_upwards(path):
     update_cached_folder_size(path, total_folder_size, commit=False)
     return total_folder_size
 
+def clear_cache():
+    session.query(DirectorySizeCache).delete()
+    session.commit()
+
 def apply_changes(changes, path):
     new_files = changes["new_files"]
     deleted_files = changes["deleted_files"]
